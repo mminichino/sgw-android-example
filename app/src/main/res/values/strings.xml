@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">sgwdemo</string>
+    <string name="store">Store</string>
+    <string name="empid">ID</string>
+    <string name="display">Display</string>
+    <string name="storeFieldLabel">Store:</string>
+    <string name="employee_idFieldLabel">Employee ID:</string>
+</resources>

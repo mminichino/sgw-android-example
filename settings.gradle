@@ -1,0 +1,18 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        maven { url 'https://mobile.maven.couchbase.com/maven2/dev/' }
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://mobile.maven.couchbase.com/maven2/dev/' }
+    }
+}
+rootProject.name = "sgwdemo"
+include ':app'
