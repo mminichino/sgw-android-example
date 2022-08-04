@@ -5,4 +5,6 @@
     <string name="display">Display</string>
     <string name="storeFieldLabel">Store:</string>
     <string name="employee_idFieldLabel">Employee ID:</string>
+    <string name="dump">dump</string>
+    <string name="documentCount">count</string>
 </resources>

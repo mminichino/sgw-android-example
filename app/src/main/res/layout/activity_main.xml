@@ -10,11 +10,10 @@
         android:id="@+id/editStore"
         android:layout_width="110dp"
         android:layout_height="52dp"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:hint="@string/store"
         android:inputType="text"
         app:layout_constraintBottom_toTopOf="@+id/editEID"
@@ -25,12 +24,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="24dp"
         android:paddingStart="10dp"
         android:text="@string/storeFieldLabel"
         android:textSize="20sp"
         app:layout_constraintEnd_toStartOf="@+id/editStore"
-        app:layout_constraintHorizontal_bias="0.785"
+        app:layout_constraintHorizontal_bias="0.876"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -38,14 +37,12 @@
         android:id="@+id/editEID"
         android:layout_width="110dp"
         android:layout_height="52dp"
-        android:layout_margin="16dp"
+        android:layout_margin="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:hint="@string/empid"
         android:inputType="text"
-        app:layout_constraintBottom_toTopOf="@+id/showData"
+        app:layout_constraintBottom_toTopOf="@+id/documentCount"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editStore" />
@@ -53,14 +50,26 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="112dp"
+        android:layout_marginTop="88dp"
         android:paddingStart="10dp"
         android:text="@string/employee_idFieldLabel"
         android:textSize="20sp"
         app:layout_constraintEnd_toStartOf="@+id/editEID"
-        app:layout_constraintHorizontal_bias="0.8"
+        app:layout_constraintHorizontal_bias="0.64"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/documentCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/documentCount"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/showData"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editEID" />
 
     <Button
         android:id="@+id/showData"
@@ -76,15 +85,33 @@
         android:textColor="@android:color/white"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.305"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editEID" />
+        app:layout_constraintTop_toBottomOf="@+id/documentCount" />
+
+    <Button
+        android:id="@+id/showDump"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#3F51B5"
+        android:text="@string/dump"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@+id/textView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.235"
+        app:layout_constraintStart_toEndOf="@+id/showData"
+        app:layout_constraintTop_toBottomOf="@+id/documentCount"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ListView
         android:id="@+id/textView"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginStart="256dp"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

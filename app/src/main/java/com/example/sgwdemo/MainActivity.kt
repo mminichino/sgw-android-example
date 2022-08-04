@@ -2,17 +2,17 @@ package com.example.sgwdemo
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.couchbase.lite.*
 import java.net.URI
-import java.util.*
-import kotlin.collections.ArrayList
-import android.widget.*
 import java.time.Instant
 import java.time.format.DateTimeFormatter
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -73,9 +73,13 @@ class MainActivity : AppCompatActivity() {
         replicator.start()
 
         val showButton = findViewById<Button>(R.id.showData)
+        val dumpButton = findViewById<Button>(R.id.showDump)
         val storeNumber = findViewById<EditText>(R.id.editStore)
         val employeeID = findViewById<EditText>(R.id.editEID)
         val textView = findViewById<ListView>(R.id.textView)
+        val documentCount = findViewById<TextView>(R.id.documentCount)
+
+        startCountUpdateThread(database, documentCount)
 
         showButton.setOnClickListener {
             val store = storeNumber.text
@@ -153,5 +157,66 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        dumpButton.setOnClickListener {
+            val results: MutableList<String> = ArrayList()
+            val arrayAdapter: ArrayAdapter<*>
+
+            val rs = QueryBuilder
+                .select(
+                    SelectResult.expression(Meta.id),
+                    SelectResult.property("record_id")
+                )
+                .from(DataSource.database(database))
+                .orderBy(Ordering.property("record_id"))
+                .execute()
+            for (result in rs) {
+                val builder = StringBuilder()
+                val documentId = result.getString("id")
+                val mutableDoc = database.getDocument(documentId.toString())
+                builder.append(mutableDoc?.getString("name").toString())
+                builder.append("\n")
+                builder.append("Employee ID: ${mutableDoc?.getString("employee_id")}")
+                results.add(builder.toString())
+            }
+
+            if (results.isEmpty()) {
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("No Data")
+                builder.setMessage("The database is empty")
+                builder.setPositiveButton("Ok") { dialog, which ->
+                    Toast.makeText(applicationContext,
+                        "Ok", Toast.LENGTH_SHORT).show()
+                }
+                builder.show()
+            } else {
+                arrayAdapter = ArrayAdapter(
+                    this,
+                    android.R.layout.simple_list_item_1, results
+                )
+                textView.adapter = arrayAdapter
+            }
+        }
+
     }
+
+    private fun startCountUpdateThread(database: Database, documentCount: TextView) {
+        val runnable: Runnable = object : Runnable {
+            override fun run() {
+                try {
+                    Thread.sleep(1000)
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
+                }
+                Handler(Looper.getMainLooper()).post(object : Runnable {
+                    override fun run() {
+                        val currentCount = database.count.toString()
+                        val countDisplay = "Documents: $currentCount"
+                        documentCount.text = countDisplay
+                    }
+                })
+            }
+        }
+        Thread(runnable).start()
+    }
+
 }
