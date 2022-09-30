@@ -1,4 +1,4 @@
-package com.example.sgwdemo
+package com.example.sgwdemo.main
 
 import android.app.AlertDialog
 import android.content.Context
@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.couchbase.lite.*
+import com.example.sgwdemo.R
 import java.net.URI
 import java.time.Instant
 import java.time.format.DateTimeFormatter
