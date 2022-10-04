@@ -12,8 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.couchbase.lite.*
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
-import kotlinx.coroutines.runBlocking
-import java.net.URI
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -40,78 +38,12 @@ class MainActivity : AppCompatActivity() {
         employeeID = findViewById(R.id.editEID)
         textView = findViewById(R.id.textView)
         documentCount = findViewById(R.id.documentCount)
+
+        startCountUpdateThread(documentCount)
     }
 
     fun onDisplayTapped(view: View?) {
-
-        val dbUser: String = intent.getStringExtra("dbuser")!!
-        val db: CouchbaseConnect = CouchbaseConnect(this).getSharedInstance()
-        db.init()
-        db.openDatabase(dbUser)
-        db.syncDatabase(dbUser)
-
-        val currentCount = db.dbCount()
-        val countDisplay = "Documents: $currentCount"
-        documentCount?.text = countDisplay
-
-//        val database = db.getDatabase()
-
-//        val props = Properties()
-//        val propfile = getBaseContext().getAssets().open("config.properties")
-//        props.load(propfile)
-//
-//        val connectStringBuilder = StringBuilder()
-//        connectStringBuilder.append("ws://")
-//        connectStringBuilder.append(props.getProperty("sgwhost"))
-//        connectStringBuilder.append(":4984/")
-//        connectStringBuilder.append(props.getProperty("database"))
-//        val username = props.getProperty("username")
-//        val password = props.getProperty("password")
-//        Log.i(TAG, "SGW Target -> $connectStringBuilder")
-//        Log.i(TAG, "SGW User -> $username")
-//
-//        CouchbaseLite.init(cntx)
-//        Log.i(TAG,"Initialized CBL")
-//
-//        Log.i(TAG, "Starting DB")
-//        val cfg = DatabaseConfigurationFactory.create()
-//        val database = Database("employees", cfg)
-//
-//        database.createIndex(
-//            "StoreEmployeeIndex",
-//            IndexBuilder.valueIndex(
-//                ValueIndexItem.property("store_id"),
-//                ValueIndexItem.property("employee_id")
-//            )
-//        )
-//
-//        val replicator = Replicator(
-//            ReplicatorConfigurationFactory.create(
-//                database = database,
-//                target = URLEndpoint(URI(connectStringBuilder.toString())),
-//                type = ReplicatorType.PUSH_AND_PULL,
-//                authenticator = BasicAuthenticator(username, password.toCharArray()),
-//                continuous = true
-//            )
-//        )
-//
-//        replicator.addChangeListener { change ->
-//            val err = change.status.error
-//            if (err != null) {
-//                Log.i(TAG, "Error code ::  ${err.code}")
-//            }
-//        }
-//
-//        replicator.start()
-
-//        val showButton = findViewById<Button>(R.id.showData)
-//        val dumpButton = findViewById<Button>(R.id.showDump)
-//        val storeNumber = findViewById<EditText>(R.id.editStore)
-//        val employeeID = findViewById<EditText>(R.id.editEID)
-//        val textView = findViewById<ListView>(R.id.textView)
-//        val documentCount = findViewById<TextView>(R.id.documentCount)
-
-//        startCountUpdateThread(database, documentCount)
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
 
         val store = storeNumber!!.text
         val employee = employeeID!!.text
@@ -173,55 +105,44 @@ class MainActivity : AppCompatActivity() {
                 textView!!.adapter = arrayAdapter
             }
         }
-        db.closeDatabase()
     }
 
-//    fun onDumpTapped(view: View?) {
-//        val db: CouchbaseConnect = CouchbaseConnect(this).getSharedInstance()
-//        val database = db.getDatabase()
-//
-//        dumpButton?.setOnClickListener {
-//            val results: MutableList<String> = ArrayList()
-//            val arrayAdapter: ArrayAdapter<*>
-//
-//            val rs = QueryBuilder
-//                .select(
-//                    SelectResult.expression(Meta.id),
-//                    SelectResult.property("record_id")
-//                )
-//                .from(DataSource.database(database))
-//                .orderBy(Ordering.property("record_id"))
-//                .execute()
-//            for (result in rs) {
-//                val builder = StringBuilder()
-//                val documentId = result.getString("id")
-//                val mutableDoc = database.getDocument(documentId.toString())
-//                builder.append(mutableDoc?.getString("name").toString())
-//                builder.append("\n")
-//                builder.append("Employee ID: ${mutableDoc?.getString("employee_id")}")
-//                results.add(builder.toString())
-//            }
-//
-//            if (results.isEmpty()) {
-//                val builder = AlertDialog.Builder(this)
-//                builder.setTitle("No Data")
-//                builder.setMessage("The database is empty")
-//                builder.setPositiveButton("Ok") { dialog, which ->
-//                    Toast.makeText(applicationContext,
-//                        "Ok", Toast.LENGTH_SHORT).show()
-//                }
-//                builder.show()
-//            } else {
-//                arrayAdapter = ArrayAdapter(
-//                    this,
-//                    android.R.layout.simple_list_item_1, results
-//                )
-//                textView?.adapter = arrayAdapter
-//            }
-//        }
-//    }
+    fun onDumpTapped(view: View?) {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        val results: MutableList<String> = ArrayList()
+        val arrayAdapter: ArrayAdapter<*>
 
-    private fun startCountUpdateThread(database: Database, documentCount: TextView?) {
+        val rs = db.getAllEmployees()
+        for (result in rs) {
+            val builder = StringBuilder()
+            val documentId = result.getString("id")
+            val mutableDoc = db.getDocument(documentId.toString())
+            builder.append(mutableDoc.getString("name").toString())
+            builder.append("\n")
+            builder.append("Employee ID: ${mutableDoc.getString("employee_id")}")
+            results.add(builder.toString())
+        }
+
+        if (results.isEmpty()) {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("No Data")
+            builder.setMessage("The database is empty")
+            builder.setPositiveButton("Ok") { dialog, which ->
+                Toast.makeText(applicationContext,
+                    "Ok", Toast.LENGTH_SHORT).show()
+            }
+            builder.show()
+        } else {
+            arrayAdapter = ArrayAdapter(
+                this,
+                android.R.layout.simple_list_item_1, results
+            )
+            textView?.adapter = arrayAdapter
+        }
+    }
+
+    private fun startCountUpdateThread(documentCount: TextView?) {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         val runnable: Runnable = object : Runnable {
             override fun run() {
                 try {
@@ -231,7 +152,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 Handler(Looper.getMainLooper()).post(object : Runnable {
                     override fun run() {
-                        val currentCount = database.count.toString()
+                        val currentCount = db.dbCount()
                         val countDisplay = "Documents: $currentCount"
                         documentCount?.text = countDisplay
                     }
@@ -240,5 +161,4 @@ class MainActivity : AppCompatActivity() {
         }
         Thread(runnable).start()
     }
-
 }

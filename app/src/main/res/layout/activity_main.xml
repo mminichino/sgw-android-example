@@ -101,6 +101,7 @@
         android:backgroundTint="#3F51B5"
         android:text="@string/dump"
         android:textColor="@android:color/white"
+        android:onClick="onDumpTapped"
         app:layout_constraintBottom_toTopOf="@+id/textView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.235"

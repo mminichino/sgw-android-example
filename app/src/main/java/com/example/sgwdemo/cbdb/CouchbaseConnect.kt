@@ -1,17 +1,41 @@
 package com.example.sgwdemo.cbdb
 
 import android.content.Context
-import android.content.ContextWrapper
 import android.util.Log
 import com.couchbase.lite.*
 import java.net.URI
 import java.util.*
 
 
-class CouchbaseConnect(base: Context?) : ContextWrapper(base) {
+open class CouchbaseConnectHolder<out T: Any, in A>(creator: (A) -> T) {
+    private var creator: ((A) -> T)? = creator
+    @Volatile private var instance: T? = null
+
+    fun getInstance(arg: A): T {
+        val checkInstance = instance
+        if (checkInstance != null) {
+            return checkInstance
+        }
+
+        return synchronized(this) {
+            val checkInstanceAgain = instance
+            if (checkInstanceAgain != null) {
+                checkInstanceAgain
+            } else {
+                val created = creator!!(arg)
+                instance = created
+                creator = null
+                created
+            }
+        }
+    }
+}
+
+
+class CouchbaseConnect(context: Context) {
 
     private var TAG = "CBL-Demo"
-    private var cntx: Context = this
+    private var cntx: Context = context
     private var instance: CouchbaseConnect? = null
     var db: Database? = null
     var replicator: Replicator? = null
@@ -19,20 +43,9 @@ class CouchbaseConnect(base: Context?) : ContextWrapper(base) {
     var connectString: String? = null
     var password: String? = null
     val props = Properties()
-    val propfile = cntx.getAssets().open("config.properties")
+    val propfile = context.getAssets().open("config.properties")
 
-    fun getSharedInstance(): CouchbaseConnect {
-        if (instance == null) {
-            Log.i(TAG, "DBM: Creating new instance")
-            instance = CouchbaseConnect(this)
-        }
-        Log.i(TAG, "DBM: Returning existing instance")
-        return instance as CouchbaseConnect
-    }
-
-//    fun getDatabase(): Database {
-//        return db
-//    }
+    companion object : CouchbaseConnectHolder<CouchbaseConnect, Context>(::CouchbaseConnect)
 
     fun init() {
         props.load(propfile)
@@ -105,6 +118,17 @@ class CouchbaseConnect(base: Context?) : ContextWrapper(base) {
                     )
             )
             .orderBy(Ordering.expression(Meta.id))
+            .execute()
+    }
+
+    fun getAllEmployees(): ResultSet {
+        return QueryBuilder
+            .select(
+                SelectResult.expression(Meta.id),
+                SelectResult.property("record_id")
+            )
+            .from(DataSource.database(db!!))
+            .orderBy(Ordering.property("record_id"))
             .execute()
     }
 

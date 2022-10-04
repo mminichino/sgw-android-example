@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
 
     fun onLoginTapped(view: View?) {
         if (usernameInput!!.length() > 0 && passwordInput!!.length() > 0) {
-            val db: CouchbaseConnect = CouchbaseConnect(this).getSharedInstance()
+            val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
             val storeId = storeIdInput!!.text.toString()
             val username = usernameInput!!.text.toString()
             val password = passwordInput!!.text.toString()
@@ -42,11 +42,9 @@ class LoginActivity : AppCompatActivity() {
             db.init()
             db.openDatabase(dbUser)
             db.syncDatabase(dbUser)
-            db.closeDatabase()
 
             val intent = Intent(cntx, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            intent.putExtra("dbuser", dbUser)
             startActivity(intent)
         }
     }
