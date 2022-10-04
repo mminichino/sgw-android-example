@@ -32,6 +32,12 @@
             android:layout_marginTop="25dp"
             android:layout_marginBottom="25dp">
             <EditText
+                android:id="@+id/storeIdInput"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:hint="@string/storeId" />
+            <EditText
                 android:id="@+id/usernameInput"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
