@@ -27,11 +27,15 @@ class MainActivity : AppCompatActivity() {
     var employeeID: EditText? = null
     var textView: ListView? = null
     var documentCount: TextView? = null
+    var employeeIdValue: String? = null
+    var storeIdValue: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        employeeIdValue = intent.getStringExtra("UserName")
+        storeIdValue = intent.getStringExtra("StoreID")
         showButton = findViewById(R.id.showData)
         dumpButton = findViewById(R.id.showDump)
         storeNumber = findViewById(R.id.editStore)

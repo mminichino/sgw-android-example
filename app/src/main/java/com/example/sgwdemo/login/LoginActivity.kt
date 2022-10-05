@@ -45,6 +45,8 @@ class LoginActivity : AppCompatActivity() {
 
             val intent = Intent(cntx, MainActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            intent.putExtra("StoreID",storeId)
+            intent.putExtra("UserName",username)
             startActivity(intent)
         }
     }
