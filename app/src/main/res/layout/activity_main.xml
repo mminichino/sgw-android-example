@@ -25,21 +25,83 @@
             android:orientation="vertical"
             android:layout_marginTop="25dp"
             android:layout_marginBottom="25dp">
-            <EditText
-                android:id="@+id/editStore"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/storeId"
-                android:inputType="text" />
 
-            <EditText
-                android:id="@+id/editEID"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/empid"
-                android:inputType="text" />
+            <TableLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="30dp">
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/name"
+                        android:textSize="14sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/employeeName"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:padding="5dp" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/email"
+                        android:textSize="14sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/employeeEmail"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:padding="5dp" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/address"
+                        android:textSize="14sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/employeeAddress"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:padding="5dp" />
+                </TableRow>
+                <TableRow>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/phone"
+                        android:textSize="14sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/employeePhone"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:padding="5dp" />
+                </TableRow>
+            </TableLayout>
 
             <TextView
                 android:id="@+id/documentCount"
@@ -47,6 +109,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="@string/documentCount"
+                android:padding="16dp"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -58,9 +121,9 @@
             android:layout_marginTop="@dimen/fab_margin"
             android:padding="@dimen/fab_margin"
             android:backgroundTint="@color/colorPrimary"
-            android:text="@string/display"
+            android:text="@string/logout"
             android:textColor="@color/white"
-            android:onClick="onDisplayTapped" />
+            android:onClick="onLogoutTapped" />
 
         <Button
             android:id="@+id/showDump"
@@ -74,14 +137,27 @@
             android:textColor="@color/white"
             android:onClick="onDumpTapped" />
 
-        <ListView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/fab_margin"
+        <ScrollView
             android:padding="@dimen/fab_margin"
-            android:textSize="20sp" />
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="25dp"
+                android:layout_marginBottom="25dp">
+                <TableLayout
+                    android:id="@+id/dumpTable"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="30dp">
+                </TableLayout>
+            </LinearLayout>
+        </ScrollView>
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -103,11 +103,7 @@ class CouchbaseConnect(context: Context) {
     fun employeeLookup(store: String, employee: String): ResultSet {
         return QueryBuilder
             .select(
-                SelectResult.expression(Meta.id),
-                SelectResult.property("name"),
-                SelectResult.property("store_id"),
-                SelectResult.property("employee_id"),
-                SelectResult.property("timecards")
+                SelectResult.all()
             )
             .from(DataSource.database(db!!))
             .where(
@@ -124,12 +120,25 @@ class CouchbaseConnect(context: Context) {
     fun getAllEmployees(): ResultSet {
         return QueryBuilder
             .select(
-                SelectResult.expression(Meta.id),
-                SelectResult.property("record_id")
+                SelectResult.all()
             )
             .from(DataSource.database(db!!))
             .orderBy(Ordering.property("record_id"))
             .execute()
+    }
+
+    fun getDocId(employee: String): String? {
+        val rs = QueryBuilder
+            .select(
+                SelectResult.expression(Meta.id)
+            )
+            .from(DataSource.database(db!!))
+            .where(
+                Expression.property("employee_id").equalTo(Expression.string(employee))
+            )
+            .execute()
+        val results = rs.allResults()
+        return results.first().getString("id")
     }
 
     fun getDocument(documentId: String): MutableDocument {
