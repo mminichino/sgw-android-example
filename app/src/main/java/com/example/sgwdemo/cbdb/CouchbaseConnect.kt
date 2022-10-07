@@ -144,7 +144,7 @@ class CouchbaseConnect(context: Context) {
             )
             .execute()
         val results = rs.allResults()
-        return results.first().getString("id")
+        return results.firstOrNull()?.getString("id")
     }
 
     fun getEmployeePassword(employee: String): String? {
@@ -158,7 +158,7 @@ class CouchbaseConnect(context: Context) {
             )
             .execute()
         val results = rs.allResults()
-        return results.first().getString("password")
+        return results.firstOrNull()?.getString("password")
     }
 
     fun getDocument(documentId: String): MutableDocument {

@@ -9,11 +9,14 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import com.example.sgwdemo.R
 import com.example.sgwdemo.main.MainActivity
 import com.example.sgwdemo.cbdb.CouchbaseConnect
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import java.security.MessageDigest
 import java.util.*
+import kotlinx.coroutines.*
 
 
 class LoginActivity : AppCompatActivity() {
@@ -22,6 +25,7 @@ class LoginActivity : AppCompatActivity() {
     var usernameInput: EditText? = null
     var passwordInput: EditText? = null
     var storeIdInput: EditText? = null
+    var progress: CircularProgressIndicator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,6 +33,7 @@ class LoginActivity : AppCompatActivity() {
         usernameInput = findViewById(R.id.usernameInput)
         passwordInput = findViewById(R.id.passwordInput)
         storeIdInput = findViewById(R.id.storeIdInput)
+        progress = findViewById(R.id.progressBarLoginWait)
     }
 
     fun onLoginTapped(view: View?) {
@@ -38,6 +43,7 @@ class LoginActivity : AppCompatActivity() {
         val username = usernameInput!!.text.toString()
         val password = passwordInput!!.text.toString()
         val passwordHashed = hashPassword(password)
+        var employeePassword: String? = null
 
         if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0 || storeId.isEmpty()) {
             showMessageDialog("Missing Information",
@@ -45,8 +51,23 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
+        progress!!.visibility = View.VISIBLE
         setupDb(storeId)
-        val employeePassword = db.getEmployeePassword(username)
+
+        for (iterationCount in 1..100) {
+            employeePassword = db.getEmployeePassword(username)
+            if (employeePassword != null) {
+                break
+            } else {
+                Thread.sleep(100)
+            }
+        }
+
+        if (employeePassword == null) {
+            showMessageDialog("Timeout",
+                "Timeout waiting for data sync")
+            return
+        }
 
         Log.i(TAG, "Login employee ID -> $username")
 

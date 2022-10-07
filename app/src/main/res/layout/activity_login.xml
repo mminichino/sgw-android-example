@@ -63,5 +63,15 @@
             android:onClick="onLoginTapped"
             android:padding="@dimen/fab_margin"
             android:text="@string/sign_in"/>
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progressBarLoginWait"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:layout_marginTop="@dimen/gap_margin"
+            android:indeterminate="true"
+            android:visibility="invisible"
+            app:indicatorColor="@color/colorPrimary" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
