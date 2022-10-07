@@ -136,11 +136,14 @@ class MainActivity : AppCompatActivity() {
             val dumpRowLabel = TextView(this)
             val dumpRowElement = TextView(this)
             val scale = resources.displayMetrics.density
-            val dpAsPixels = (6 * scale)
+            val dpAsPixels = (10 * scale)
 
+            val builder = StringBuilder()
+            builder.append(docsProps!!.getString("employee_id").toString())
+            builder.append(")")
             dumpRowLabel.setTextColor(Color.BLACK)
             dumpRowLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-            dumpRowLabel.text = docsProps!!.getString("employee_id").toString()
+            dumpRowLabel.text = builder.toString()
             dumpRow.addView(dumpRowLabel)
             dumpRowElement.setTextColor(Color.BLACK)
             dumpRowElement.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)

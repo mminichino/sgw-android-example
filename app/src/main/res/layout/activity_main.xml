@@ -14,7 +14,7 @@
         android:layout_height="match_parent"
         android:layout_centerHorizontal="true"
         android:orientation="vertical"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -23,8 +23,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="vertical"
-            android:layout_marginTop="25dp"
-            android:layout_marginBottom="25dp">
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp">
 
             <TableLayout
                 android:layout_width="wrap_content"
@@ -109,7 +109,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:text="@string/documentCount"
-                android:padding="16dp"
+                android:padding="8dp"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -147,8 +147,8 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:orientation="vertical"
-                android:layout_marginTop="25dp"
-                android:layout_marginBottom="25dp">
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp">
                 <TableLayout
                     android:id="@+id/dumpTable"
                     android:layout_width="wrap_content"

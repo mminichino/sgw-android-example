@@ -43,6 +43,7 @@ class CouchbaseConnect(context: Context) {
     var connectString: String? = null
     var password: String? = null
     val props = Properties()
+    var dbOpen: Boolean = false
     val propfile = context.getAssets().open("config.properties")
 
     companion object : CouchbaseConnectHolder<CouchbaseConnect, Context>(::CouchbaseConnect)
@@ -98,6 +99,11 @@ class CouchbaseConnect(context: Context) {
         }
 
         replicator!!.start()
+        dbOpen = true
+    }
+
+    fun isDbOpen(): Boolean {
+        return dbOpen
     }
 
     fun employeeLookup(store: String, employee: String): ResultSet {
@@ -141,6 +147,20 @@ class CouchbaseConnect(context: Context) {
         return results.first().getString("id")
     }
 
+    fun getEmployeePassword(employee: String): String? {
+        val rs = QueryBuilder
+            .select(
+                SelectResult.property("password")
+            )
+            .from(DataSource.database(db!!))
+            .where(
+                Expression.property("employee_id").equalTo(Expression.string(employee))
+            )
+            .execute()
+        val results = rs.allResults()
+        return results.first().getString("password")
+    }
+
     fun getDocument(documentId: String): MutableDocument {
         return db!!.getDocument(documentId)!!.toMutable()
     }
@@ -159,6 +179,7 @@ class CouchbaseConnect(context: Context) {
                 stopSync()
                 db!!.close()
                 db = null
+                dbOpen = false
             }
         } catch (e: CouchbaseLiteException) {
             e.printStackTrace()
