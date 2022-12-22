@@ -36,7 +36,7 @@ class CouchbaseConnect(context: Context) {
 
     private var TAG = "CBL-Demo"
     private var cntx: Context = context
-    private var instance: CouchbaseConnect? = null
+//    private var instance: CouchbaseConnect? = null
     var db: Database? = null
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
@@ -79,14 +79,15 @@ class CouchbaseConnect(context: Context) {
         }
     }
 
-    fun syncDatabase(username: String) {
-        Log.i(TAG, "DB Sync -> $username")
+    fun syncDatabase(session: String, cookie: String) {
+        Log.i(TAG, "DB Session Cookie -> $cookie")
         replicator = Replicator(
             ReplicatorConfigurationFactory.create(
                 database = db,
                 target = URLEndpoint(URI(connectString)),
                 type = ReplicatorType.PUSH_AND_PULL,
-                authenticator = BasicAuthenticator(username, password!!.toCharArray()),
+//                authenticator = BasicAuthenticator(username, password!!.toCharArray()),
+                authenticator = SessionAuthenticator(session, cookie),
                 continuous = true
             )
         )

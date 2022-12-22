@@ -9,23 +9,37 @@ import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.isVisible
 import com.example.sgwdemo.R
-import com.example.sgwdemo.main.MainActivity
 import com.example.sgwdemo.cbdb.CouchbaseConnect
+import com.example.sgwdemo.main.MainActivity
+import com.example.sgwdemo.util.Util
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Path
 import java.security.MessageDigest
 import java.util.*
-import kotlinx.coroutines.*
 
 
 class LoginActivity : AppCompatActivity() {
 
-    private var TAG = "LoginActivity"
+    private val TAG = "LoginActivity"
     var usernameInput: EditText? = null
     var passwordInput: EditText? = null
     var storeIdInput: EditText? = null
     var progress: CircularProgressIndicator? = null
+    var authEndpoint: String? = null
+    var authUrl: String? = null
+    var gson: Gson? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,16 +48,18 @@ class LoginActivity : AppCompatActivity() {
         passwordInput = findViewById(R.id.passwordInput)
         storeIdInput = findViewById(R.id.storeIdInput)
         progress = findViewById(R.id.progressBarLoginWait)
+        authEndpoint = Util.getProperty("authEndpoint", applicationContext)
+        gson = GsonBuilder()
+            .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+            .create()
+        authUrl = "http://$authEndpoint:8080"
     }
 
     fun onLoginTapped(view: View?) {
         val cntx: Context = getApplicationContext()
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
         val storeId = storeIdInput!!.text.toString()
         val username = usernameInput!!.text.toString()
         val password = passwordInput!!.text.toString()
-        val passwordHashed = hashPassword(password)
-        var employeePassword: String? = null
 
         if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0 || storeId.isEmpty()) {
             showMessageDialog("Missing Information",
@@ -52,37 +68,64 @@ class LoginActivity : AppCompatActivity() {
         }
 
         progress!!.visibility = View.VISIBLE
-        setupDb(storeId)
 
-        for (iterationCount in 1..100) {
-            employeePassword = db.getEmployeePassword(username)
-            if (employeePassword != null) {
-                break
-            } else {
-                Thread.sleep(100)
+        val sgwLogin = "store_id@$storeId"
+        val credentials = "$username:$password"
+        val authHeaderValue = "Basic " + Base64
+            .getEncoder()
+            .encodeToString(credentials.toByteArray(Charsets.UTF_8))
+
+        val interceptor = Interceptor { chain ->
+            val newRequest: Request =
+                chain.request()
+                    .newBuilder()
+                    .addHeader("Authorization", authHeaderValue).build()
+            chain.proceed(newRequest)
+        }
+
+        val builder = OkHttpClient.Builder()
+        builder.interceptors().add(interceptor)
+        val client = builder.build()
+
+        Log.d(TAG, "Auth URL: $authUrl")
+
+        val service = Retrofit.Builder()
+            .baseUrl(authUrl!!)
+            .addConverterFactory(GsonConverterFactory.create(gson!!))
+            .client(client)
+            .build()
+            .create(SessionService::class.java)
+
+        val call: Call<SessionResponse> = service.getSession(sgwLogin)
+        call.enqueue(object : Callback<SessionResponse> {
+
+            override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
+                Log.d(TAG, "Auth API called failed")
+                t.printStackTrace()
+                showMessageDialog("Error",
+                    "Authorization Service Unavailable")
             }
-        }
 
-        if (employeePassword == null) {
-            showMessageDialog("Timeout",
-                "Timeout waiting for data sync")
-            return
-        }
+            override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
+                if (response.isSuccessful) {
+                    Log.d(TAG, "Session " + response.body()!!.session_id)
+                    Log.d(TAG, "Cookie " + response.body()!!.cookie_name)
 
-        Log.i(TAG, "Login employee ID -> $username")
+                    setupDb(storeId, response.body()!!.cookie_name, response.body()!!.session_id)
 
-        if (employeePassword != passwordHashed) {
-            showMessageDialog("Incorrect Password",
-                "The password you entered is incorrect")
-            return
-        }
-
-        val intent = Intent(cntx, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        intent.putExtra("StoreID",storeId)
-        intent.putExtra("UserName",username)
-        startActivity(intent)
+                    val intent = Intent(cntx, MainActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                            or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    intent.putExtra("StoreID",storeId)
+                    intent.putExtra("UserName",username)
+                    startActivity(intent)
+                } else {
+                    showMessageDialog("Unauthorized",
+                        "Login was not successful")
+                }
+                progress!!.visibility = View.INVISIBLE
+            }
+        })
     }
 
     private fun hashPassword(password: String): String {
@@ -104,7 +147,7 @@ class LoginActivity : AppCompatActivity() {
         builder.show()
     }
 
-    fun setupDb(storeId: String) {
+    fun setupDb(storeId: String, sessionCookie: String, sessionId: String) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
 
         if (!db.isDbOpen()) {
@@ -115,7 +158,18 @@ class LoginActivity : AppCompatActivity() {
 
             db.init()
             db.openDatabase(dbUser)
-            db.syncDatabase(dbUser)
+            db.syncDatabase(sessionId, sessionCookie)
         }
     }
+}
+
+data class SessionResponse(
+    val cookie_name: String,
+    val expires: String,
+    val session_id: String
+    )
+
+interface SessionService {
+    @GET("/api/v1/auth/name/{username}")
+    fun getSession(@Path("username") username: String): Call<SessionResponse>
 }
