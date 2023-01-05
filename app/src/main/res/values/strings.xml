@@ -16,4 +16,5 @@
     <string name="address">Address:</string>
     <string name="phone">Phone:</string>
     <string name="logout">Logout</string>
+    <string name="settings">Settings</string>
 </resources>
