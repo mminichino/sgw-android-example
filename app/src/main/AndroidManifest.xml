@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".main.MainActivity" />
+        <activity android:name=".preferences.PreferenceActivity" />
     </application>
 
 </manifest>

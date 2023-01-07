@@ -3,6 +3,7 @@ package com.example.sgwdemo.login
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -14,7 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.main.MainActivity
+import com.example.sgwdemo.preferences.PreferenceActivity
 import com.example.sgwdemo.util.Util
+import com.example.sgwdemo.util.AppPreferences
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -50,11 +53,12 @@ class LoginActivity : AppCompatActivity() {
         passwordInput = findViewById(R.id.passwordInput)
         storeIdInput = findViewById(R.id.storeIdInput)
         progress = findViewById(R.id.progressBarLoginWait)
-        authEndpoint = Util.getProperty("authEndpoint", applicationContext)
+//        authEndpoint = Util.getProperty("authEndpoint", applicationContext)
         gson = GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
             .create()
-        authUrl = "http://$authEndpoint:8080"
+//        authUrl = "http://$authEndpoint:8080"
+        AppPreferences.setSharedPreferenceData(applicationContext)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -63,8 +67,12 @@ class LoginActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val cntx: Context = getApplicationContext()
         when (item.itemId){
-            R.id.settings -> Toast.makeText(this,"Settings Selected",Toast.LENGTH_SHORT).show()
+            R.id.settings -> {
+                val intent = Intent(cntx, PreferenceActivity::class.java)
+                startActivity(intent)
+            }
         }
         return super.onOptionsItemSelected(item)
     }
@@ -74,6 +82,8 @@ class LoginActivity : AppCompatActivity() {
         val storeId = storeIdInput!!.text.toString()
         val username = usernameInput!!.text.toString()
         val password = passwordInput!!.text.toString()
+        val pref: SharedPreferences =
+            applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
         if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0 || storeId.isEmpty()) {
             showMessageDialog("Missing Information",
@@ -101,6 +111,8 @@ class LoginActivity : AppCompatActivity() {
         builder.interceptors().add(interceptor)
         val client = builder.build()
 
+        val serviceAddress = pref.getString(R.string.servicePropertyKey.toString(), "")
+        authUrl = "http://$serviceAddress:8080"
         Log.d(TAG, "Auth URL: $authUrl")
 
         val service = Retrofit.Builder()

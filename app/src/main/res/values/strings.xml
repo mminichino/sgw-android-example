@@ -17,4 +17,9 @@
     <string name="phone">Phone:</string>
     <string name="logout">Logout</string>
     <string name="settings">Settings</string>
+    <string name="serviceAddress">Auth Service Address</string>
+    <string name="gatewayAddress">Sync Gateway Address</string>
+    <string name="saveButton">Save</string>
+    <string name="servicePropertyKey">auth_service_address</string>
+    <string name="gatewayPropertyKey">sync_gateway_address</string>
 </resources>

@@ -1,8 +1,10 @@
 package com.example.sgwdemo.cbdb
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import com.couchbase.lite.*
+import com.example.sgwdemo.R
 import java.net.URI
 import java.util.*
 
@@ -41,22 +43,25 @@ class CouchbaseConnect(context: Context) {
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
     var connectString: String? = null
-    var password: String? = null
     val props = Properties()
     var dbOpen: Boolean = false
+    var replicatorBusy: Boolean = false
+    var replicatorConnecting: Boolean = false
     val propfile = context.getAssets().open("config.properties")
+    val pref: SharedPreferences =
+        context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
     companion object : CouchbaseConnectHolder<CouchbaseConnect, Context>(::CouchbaseConnect)
 
     fun init() {
+        val gatewayAddress = pref.getString(R.string.gatewayPropertyKey.toString(), "")
         props.load(propfile)
         val connectStringBuilder = StringBuilder()
         connectStringBuilder.append("ws://")
-        connectStringBuilder.append(props.getProperty("sgwhost"))
+        connectStringBuilder.append(gatewayAddress)
         connectStringBuilder.append(":4984/")
         connectStringBuilder.append(props.getProperty("database"))
         connectString = connectStringBuilder.toString()
-        password = props.getProperty("password")
         Log.i(TAG, "DB init -> $connectStringBuilder")
         CouchbaseLite.init(cntx)
     }
@@ -97,6 +102,14 @@ class CouchbaseConnect(context: Context) {
             if (err != null) {
                 Log.i(TAG, "Error code ::  ${err.code}")
             }
+            replicatorBusy = change.status.activityLevel === ReplicatorActivityLevel.BUSY
+            replicatorConnecting =
+                change.status.activityLevel === ReplicatorActivityLevel.CONNECTING
+            if (!replicatorBusy && !replicatorConnecting) {
+                val total = change.status.progress.total
+                val completed = change.status.progress.completed
+                Log.i(TAG, "Replication progress => total = $total completed = $completed")
+            }
         }
 
         replicator!!.start()
@@ -108,6 +121,7 @@ class CouchbaseConnect(context: Context) {
     }
 
     fun employeeLookup(store: String, employee: String): ResultSet {
+        replicationWait()
         return QueryBuilder
             .select(
                 SelectResult.all()
@@ -125,6 +139,7 @@ class CouchbaseConnect(context: Context) {
     }
 
     fun getAllEmployees(): ResultSet {
+        replicationWait()
         return QueryBuilder
             .select(
                 SelectResult.all()
@@ -135,6 +150,7 @@ class CouchbaseConnect(context: Context) {
     }
 
     fun getDocId(employee: String): String? {
+        replicationWait()
         val rs = QueryBuilder
             .select(
                 SelectResult.expression(Meta.id)
@@ -148,19 +164,20 @@ class CouchbaseConnect(context: Context) {
         return results.firstOrNull()?.getString("id")
     }
 
-    fun getEmployeePassword(employee: String): String? {
-        val rs = QueryBuilder
-            .select(
-                SelectResult.property("password")
-            )
-            .from(DataSource.database(db!!))
-            .where(
-                Expression.property("employee_id").equalTo(Expression.string(employee))
-            )
-            .execute()
-        val results = rs.allResults()
-        return results.firstOrNull()?.getString("password")
-    }
+//    fun getEmployeePassword(employee: String): String? {
+//        replicationWait()
+//        val rs = QueryBuilder
+//            .select(
+//                SelectResult.property("password")
+//            )
+//            .from(DataSource.database(db!!))
+//            .where(
+//                Expression.property("employee_id").equalTo(Expression.string(employee))
+//            )
+//            .execute()
+//        val results = rs.allResults()
+//        return results.firstOrNull()?.getString("password")
+//    }
 
     fun getDocument(documentId: String): MutableDocument {
         return db!!.getDocument(documentId)!!.toMutable()
@@ -172,6 +189,12 @@ class CouchbaseConnect(context: Context) {
 
     fun dbCount(): String {
         return db!!.count.toString()
+    }
+
+    fun replicationWait() {
+        if (replicatorBusy || replicatorConnecting) {
+            Thread.sleep(100)
+        }
     }
 
     fun closeDatabase() {
