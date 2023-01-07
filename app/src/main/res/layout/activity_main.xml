@@ -101,6 +101,22 @@
                         android:textSize="14sp"
                         android:padding="5dp" />
                 </TableRow>
+                <TableRow>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/zipCode"
+                        android:textSize="14sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/employeeZipCode"
+                        android:layout_width="200dp"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="14sp"
+                        android:padding="5dp" />
+                </TableRow>
             </TableLayout>
 
             <TextView

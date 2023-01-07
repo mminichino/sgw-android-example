@@ -37,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     var employeeEmail: TextView? = null
     var employeeAddress: TextView? = null
     var employeePhone: TextView? = null
+    var employeeZipCode: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +56,7 @@ class MainActivity : AppCompatActivity() {
         employeeEmail = findViewById(R.id.employeeEmail)
         employeeAddress = findViewById(R.id.employeeAddress)
         employeePhone = findViewById(R.id.employeePhone)
+        employeeZipCode = findViewById(R.id.employeeZipCode)
 
         populateEmployeeInfo(storeIdValue!!, employeeIdValue!!)
         startCountUpdateThread(documentCount)
@@ -200,6 +202,7 @@ class MainActivity : AppCompatActivity() {
         employeeAddress?.text = docsProps?.getString("address").toString()
         employeeEmail?.text = docsProps?.getString("email").toString()
         employeePhone?.text = docsProps?.getString("phone").toString()
+        employeeZipCode?.text = docsProps?.getString("zip_code").toString()
 
         val documentId = db.getDocId(employee)
         val mutableTimeCardArray: MutableArray? = docsProps?.getArray("timecards")?.toMutable()
