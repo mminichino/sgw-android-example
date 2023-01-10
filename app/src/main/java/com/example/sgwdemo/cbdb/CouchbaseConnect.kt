@@ -6,7 +6,6 @@ import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.R
 import java.net.URI
-import java.util.*
 
 
 open class CouchbaseConnectHolder<out T: Any, in A>(creator: (A) -> T) {
@@ -38,16 +37,13 @@ class CouchbaseConnect(context: Context) {
 
     private var TAG = "CBL-Demo"
     private var cntx: Context = context
-//    private var instance: CouchbaseConnect? = null
     var db: Database? = null
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
     var connectString: String? = null
-    val props = Properties()
     var dbOpen: Boolean = false
     var replicatorBusy: Boolean = false
     var replicatorConnecting: Boolean = false
-    val propfile = context.getAssets().open("config.properties")
     val pref: SharedPreferences =
         context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
@@ -55,14 +51,11 @@ class CouchbaseConnect(context: Context) {
 
     fun init() {
         val gatewayAddress = pref.getString(R.string.gatewayPropertyKey.toString(), "")
-        props.load(propfile)
-        val connectStringBuilder = StringBuilder()
-        connectStringBuilder.append("ws://")
-        connectStringBuilder.append(gatewayAddress)
-        connectStringBuilder.append(":4984/")
-        connectStringBuilder.append(props.getProperty("database"))
-        connectString = connectStringBuilder.toString()
-        Log.i(TAG, "DB init -> $connectStringBuilder")
+        val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
+
+        connectString = "ws://$gatewayAddress:4984/$databaseName"
+        Log.i(TAG, "DB init -> $connectString")
+
         CouchbaseLite.init(cntx)
     }
 

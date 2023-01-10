@@ -22,5 +22,11 @@
     <string name="saveButton">Save</string>
     <string name="servicePropertyKey">auth_service_address</string>
     <string name="gatewayPropertyKey">sync_gateway_address</string>
+    <string name="databaseNameKey">database_name</string>
     <string name="zipCode">Zip:</string>
+    <string name="databaseName">Database Name</string>
+    <string name="clearButton">Clear App Data</string>
+    <string name="gatewayLabel">Sync Gateway IP:</string>
+    <string name="authServiceLabel">Auth Service IP:</string>
+    <string name="databaseNameLabel">Database Name:</string>
 </resources>

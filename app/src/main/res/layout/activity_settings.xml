@@ -25,18 +25,45 @@
             android:orientation="vertical"
             android:layout_marginTop="25dp"
             android:layout_marginBottom="25dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:text="@string/gatewayLabel"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
             <EditText
                 android:id="@+id/gatewayAddress"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="54dp"
                 android:backgroundTint="@color/colorPrimary"
                 android:hint="@string/gatewayAddress" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:text="@string/authServiceLabel"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
             <EditText
                 android:id="@+id/serviceAddress"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="54dp"
                 android:backgroundTint="@color/colorPrimary"
                 android:hint="@string/serviceAddress" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:text="@string/databaseNameLabel"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
+            <EditText
+                android:id="@+id/databaseName"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:hint="@string/databaseName" />
         </LinearLayout>
 
         <Button
@@ -50,6 +77,18 @@
             android:onClick="onSaveTapped"
             android:padding="@dimen/fab_margin"
             android:text="@string/saveButton"/>
+
+        <Button
+            android:id="@+id/clearAppDataButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:backgroundTint="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:onClick="onClearTapped"
+            android:padding="@dimen/fab_margin"
+            android:text="@string/clearButton"/>
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

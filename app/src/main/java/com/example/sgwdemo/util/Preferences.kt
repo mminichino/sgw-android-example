@@ -8,6 +8,7 @@ object AppPreferences {
     fun setSharedPreferenceData(context: Context) {
         val defaultHost = Util.getProperty("sgwhost", context)
         val defaultEndpoint = Util.getProperty("authEndpoint", context)
+        val defaultDatabase = Util.getProperty("database", context)
         val pref: SharedPreferences =
             context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
@@ -17,6 +18,10 @@ object AppPreferences {
 
         if (!pref.contains(R.string.gatewayPropertyKey.toString())) {
             pref.edit().putString(R.string.gatewayPropertyKey.toString(), defaultHost).apply()
+        }
+
+        if (!pref.contains(R.string.databaseNameKey.toString())) {
+            pref.edit().putString(R.string.databaseNameKey.toString(), defaultDatabase).apply()
         }
     }
 }

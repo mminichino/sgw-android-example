@@ -16,7 +16,6 @@ import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.main.MainActivity
 import com.example.sgwdemo.preferences.PreferenceActivity
-import com.example.sgwdemo.util.Util
 import com.example.sgwdemo.util.AppPreferences
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.gson.Gson
@@ -42,7 +41,6 @@ class LoginActivity : AppCompatActivity() {
     var passwordInput: EditText? = null
     var storeIdInput: EditText? = null
     var progress: CircularProgressIndicator? = null
-    var authEndpoint: String? = null
     var authUrl: String? = null
     var gson: Gson? = null
 
@@ -53,11 +51,9 @@ class LoginActivity : AppCompatActivity() {
         passwordInput = findViewById(R.id.passwordInput)
         storeIdInput = findViewById(R.id.storeIdInput)
         progress = findViewById(R.id.progressBarLoginWait)
-//        authEndpoint = Util.getProperty("authEndpoint", applicationContext)
         gson = GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
             .create()
-//        authUrl = "http://$authEndpoint:8080"
         AppPreferences.setSharedPreferenceData(applicationContext)
     }
 
