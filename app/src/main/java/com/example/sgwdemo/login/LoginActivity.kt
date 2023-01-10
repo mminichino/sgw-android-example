@@ -29,7 +29,6 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
-import retrofit2.http.Path
 import java.security.MessageDigest
 import java.util.*
 
@@ -39,7 +38,6 @@ class LoginActivity : AppCompatActivity() {
     private val TAG = "LoginActivity"
     var usernameInput: EditText? = null
     var passwordInput: EditText? = null
-    var storeIdInput: EditText? = null
     var progress: CircularProgressIndicator? = null
     var authUrl: String? = null
     var gson: Gson? = null
@@ -49,7 +47,6 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         usernameInput = findViewById(R.id.usernameInput)
         passwordInput = findViewById(R.id.passwordInput)
-        storeIdInput = findViewById(R.id.storeIdInput)
         progress = findViewById(R.id.progressBarLoginWait)
         gson = GsonBuilder()
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
@@ -75,13 +72,12 @@ class LoginActivity : AppCompatActivity() {
 
     fun onLoginTapped(view: View?) {
         val cntx: Context = getApplicationContext()
-        val storeId = storeIdInput!!.text.toString()
         val username = usernameInput!!.text.toString()
         val password = passwordInput!!.text.toString()
         val pref: SharedPreferences =
             applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
-        if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0 || storeId.isEmpty()) {
+        if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0) {
             showMessageDialog("Missing Information",
                 "Please provide your login information")
             return
@@ -89,7 +85,6 @@ class LoginActivity : AppCompatActivity() {
 
         progress!!.visibility = View.VISIBLE
 
-        val sgwLogin = "store_id@$storeId"
         val credentials = "$username:$password"
         val authHeaderValue = "Basic " + Base64
             .getEncoder()
@@ -118,7 +113,7 @@ class LoginActivity : AppCompatActivity() {
             .build()
             .create(SessionService::class.java)
 
-        val call: Call<SessionResponse> = service.getSession(sgwLogin)
+        val call: Call<SessionResponse> = service.getSession()
         call.enqueue(object : Callback<SessionResponse> {
 
             override fun onFailure(call: Call<SessionResponse>, t: Throwable) {
@@ -132,6 +127,8 @@ class LoginActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     Log.d(TAG, "Session " + response.body()!!.session_id)
                     Log.d(TAG, "Cookie " + response.body()!!.cookie_name)
+                    Log.d(TAG, "Store ID " + response.body()!!.store_id)
+                    val storeId = response.body()!!.store_id
 
                     setupDb(storeId, response.body()!!.cookie_name, response.body()!!.session_id)
 
@@ -188,10 +185,11 @@ class LoginActivity : AppCompatActivity() {
 data class SessionResponse(
     val cookie_name: String,
     val expires: String,
-    val session_id: String
+    val session_id: String,
+    val store_id: String
     )
 
 interface SessionService {
-    @GET("/api/v1/auth/name/{username}")
-    fun getSession(@Path("username") username: String): Call<SessionResponse>
+    @GET("/api/v1/auth/login")
+    fun getSession(): Call<SessionResponse>
 }
