@@ -27,6 +27,7 @@
         </activity>
         <activity android:name=".main.MainActivity" />
         <activity android:name=".preferences.PreferenceActivity" />
+        <activity android:name=".adjuster.AdjusterMainActivity" />
     </application>
 
 </manifest>

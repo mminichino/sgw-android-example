@@ -6,8 +6,12 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.login.LoginActivity
@@ -16,15 +20,22 @@ import com.example.sgwdemo.login.LoginActivity
 class PreferenceActivity : AppCompatActivity() {
     private var cntx: Context = this
     private val TAG = "PreferenceActivity"
+    var demoList: List<String>? = null
+    var tagList: List<String>? = null
     var pref: SharedPreferences? = null
     var serviceAddressInput: EditText? = null
     var gatewayAddressInput: EditText? = null
     var databaseNameInput: EditText? = null
+    var activeDemoInput: String? = null
+    var groupTagFieldInput: String? = null
+    var spinner: Spinner? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         pref = applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
+        val demoListString = pref!!.getString(R.string.demoListKey.toString(), "")
+        val tagListString = pref!!.getString(R.string.tagListKey.toString(), "")
         serviceAddressInput = findViewById(R.id.serviceAddress)
         gatewayAddressInput = findViewById(R.id.gatewayAddress)
         databaseNameInput = findViewById(R.id.databaseName)
@@ -37,6 +48,34 @@ class PreferenceActivity : AppCompatActivity() {
         databaseNameInput!!.setText(
             pref!!.getString(
                 R.string.databaseNameKey.toString(), ""))
+        demoList = demoListString!!.split(",").map { it.trim() }
+        tagList = tagListString!!.split(",").map { it.trim() }
+
+        spinner = findViewById(R.id.demoSelect)
+        if (spinner != null) {
+            val adapter = ArrayAdapter(
+                this,
+                R.layout.demo_spinner, demoList!!
+            )
+            spinner!!.adapter = adapter
+
+            spinner!!.onItemSelectedListener = object :
+                AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                    Log.i(TAG, "Demo List: $demoListString")
+                    Log.i(TAG, "Tag List : $tagListString")
+                    activeDemoInput = demoList!![position]
+                    groupTagFieldInput = tagList!![position]
+                    databaseNameInput!!.setText(activeDemoInput!!.toString())
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>) {
+                    activeDemoInput = pref!!.getString(
+                        R.string.activeDemoKey.toString(), "")
+                }
+            }
+        }
     }
 
     fun onSaveTapped(view: View?) {
@@ -49,6 +88,13 @@ class PreferenceActivity : AppCompatActivity() {
         pref!!.edit()
             .putString(R.string.databaseNameKey.toString(),
                 databaseNameInput!!.text.toString()).apply()
+        pref!!.edit()
+            .putString(R.string.activeDemoKey.toString(),
+                activeDemoInput!!.toString()).apply()
+        pref!!.edit()
+            .putString(R.string.groupTagFieldKey.toString(),
+                groupTagFieldInput!!.toString()).apply()
+
         val intent = Intent(cntx, LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)

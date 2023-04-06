@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.main.MainActivity
+import com.example.sgwdemo.adjuster.AdjusterMainActivity
 import com.example.sgwdemo.preferences.PreferenceActivity
 import com.example.sgwdemo.util.AppPreferences
 import com.google.android.material.progressindicator.CircularProgressIndicator
@@ -52,6 +53,9 @@ class LoginActivity : AppCompatActivity() {
             .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
             .create()
         AppPreferences.setSharedPreferenceData(applicationContext)
+        val pref = applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
+        val databaseName = pref!!.getString(R.string.databaseNameKey.toString(), "")
+        Log.i(TAG,"Database: $databaseName")
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -76,6 +80,8 @@ class LoginActivity : AppCompatActivity() {
         val password = passwordInput!!.text.toString()
         val pref: SharedPreferences =
             applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
+        val activeDemo = pref.getString(R.string.activeDemoKey.toString(), "")
+        val groupTagField = pref.getString(R.string.groupTagFieldKey.toString(), "")
 
         if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0) {
             showMessageDialog("Missing Information",
@@ -125,19 +131,35 @@ class LoginActivity : AppCompatActivity() {
 
             override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
                 if (response.isSuccessful) {
-                    Log.d(TAG, "Session " + response.body()!!.session_id)
-                    Log.d(TAG, "Cookie " + response.body()!!.cookie_name)
-                    Log.d(TAG, "Store ID " + response.body()!!.store_id)
-                    val storeId = response.body()!!.store_id
+                    Log.d(TAG, "Session : " + response.body()!!.session_id)
+                    Log.d(TAG, "Cookie  : " + response.body()!!.cookie_name)
+                    Log.d(TAG, "Demo    : $activeDemo")
 
-                    setupDb(storeId, response.body()!!.cookie_name, response.body()!!.session_id)
+                    val groupTag = response.body()!!.group
+                    setupDb(
+                        groupTagField!!, groupTag,
+                        response.body()!!.cookie_name, response.body()!!.session_id
+                    )
 
-                    val intent = Intent(cntx, MainActivity::class.java)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                            or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                    intent.putExtra("StoreID",storeId)
-                    intent.putExtra("UserName",username)
-                    startActivity(intent)
+                    if (activeDemo === "employees") {
+                        val intent = Intent(cntx, MainActivity::class.java)
+                        intent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                                    or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        )
+                        intent.putExtra("StoreID", groupTag)
+                        intent.putExtra("UserName", username)
+                        startActivity(intent)
+                    } else {
+                        val intent = Intent(cntx, AdjusterMainActivity::class.java)
+                        intent.addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK
+                                    or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        )
+                        intent.putExtra("Region", groupTag)
+                        intent.putExtra("UserName", username)
+                        startActivity(intent)
+                    }
                 } else {
                     showMessageDialog("Unauthorized",
                         "Login was not successful")
@@ -166,13 +188,13 @@ class LoginActivity : AppCompatActivity() {
         builder.show()
     }
 
-    fun setupDb(storeId: String, sessionCookie: String, sessionId: String) {
+    fun setupDb(field: String, value: String, sessionCookie: String, sessionId: String) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
 
         if (!db.isDbOpen()) {
             val userStringBuilder = StringBuilder()
-            userStringBuilder.append("store_id@")
-            userStringBuilder.append(storeId)
+            userStringBuilder.append("$field@")
+            userStringBuilder.append(value)
             val dbUser = userStringBuilder.toString()
 
             db.init()
@@ -186,7 +208,7 @@ data class SessionResponse(
     val cookie_name: String,
     val expires: String,
     val session_id: String,
-    val store_id: String
+    val group: String
     )
 
 interface SessionService {

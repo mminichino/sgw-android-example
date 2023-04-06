@@ -36,7 +36,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
                 android:backgroundTint="@color/colorPrimary"
-                android:inputType="number"
                 android:hint="@string/username" />
             <EditText
                 android:id="@+id/passwordInput"

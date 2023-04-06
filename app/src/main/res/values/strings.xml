@@ -7,7 +7,7 @@
     <string name="employee_idFieldLabel">Employee ID:</string>
     <string name="dump">Dump</string>
     <string name="documentCount">count</string>
-    <string name="username">Employee ID</string>
+    <string name="username">Login ID</string>
     <string name="password">Password</string>
     <string name="storeId">Store ID</string>
     <string name="sign_in">Sign in</string>
@@ -23,10 +23,17 @@
     <string name="servicePropertyKey">auth_service_address</string>
     <string name="gatewayPropertyKey">sync_gateway_address</string>
     <string name="databaseNameKey">database_name</string>
+    <string name="demoListKey">demo_list</string>
+    <string name="tagListKey">tag_list</string>
+    <string name="activeDemoKey">active_demo</string>
+    <string name="groupTagFieldKey">group_tag_field</string>
     <string name="zipCode">Zip:</string>
     <string name="databaseName">Database Name</string>
     <string name="clearButton">Clear App Data</string>
     <string name="gatewayLabel">Sync Gateway IP:</string>
     <string name="authServiceLabel">Auth Service IP:</string>
     <string name="databaseNameLabel">Database Name:</string>
+    <string name="demoLabel">Demo:</string>
+    <string name="demoListTitle" />
+    <string name="claimsList">Open Claims:</string>
 </resources>

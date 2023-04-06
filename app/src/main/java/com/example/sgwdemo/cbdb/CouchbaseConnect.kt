@@ -60,13 +60,14 @@ class CouchbaseConnect(context: Context) {
     }
 
     fun openDatabase(username: String) {
+        val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
         Log.i(TAG, "DB open -> $username")
         val cfg = DatabaseConfigurationFactory.create()
         cfg.setDirectory(String.format("%s/%s", cntx.getFilesDir(), username))
         try {
-            db = Database("employees", cfg)
+            db = Database(databaseName!!, cfg)
             db!!.createIndex(
-                "StoreEmployeeIndex",
+                "DemoIndex",
                 IndexBuilder.valueIndex(
                     ValueIndexItem.property("store_id"),
                     ValueIndexItem.property("employee_id")
@@ -157,20 +158,38 @@ class CouchbaseConnect(context: Context) {
         return results.firstOrNull()?.getString("id")
     }
 
-//    fun getEmployeePassword(employee: String): String? {
-//        replicationWait()
-//        val rs = QueryBuilder
-//            .select(
-//                SelectResult.property("password")
-//            )
-//            .from(DataSource.database(db!!))
-//            .where(
-//                Expression.property("employee_id").equalTo(Expression.string(employee))
-//            )
-//            .execute()
-//        val results = rs.allResults()
-//        return results.firstOrNull()?.getString("password")
-//    }
+    fun queryDB(field: String, value: String, type: String = ""): ResultSet {
+        var whereExpression = Expression.property(field)
+            .equalTo(Expression.string(value))
+        if (type.isNotEmpty()) {
+            whereExpression = whereExpression.and(Expression.property("type")
+                .equalTo(Expression.string(type)))
+        }
+        replicationWait()
+        return QueryBuilder
+            .select(
+                SelectResult.all()
+            )
+            .from(DataSource.database(db!!))
+            .where(
+                whereExpression
+            )
+            .execute()
+    }
+
+    fun queryDBByType(type: String): ResultSet {
+        replicationWait()
+        return QueryBuilder
+            .select(
+                SelectResult.all()
+            )
+            .from(DataSource.database(db!!))
+            .where(
+                Expression.property("type")
+                    .equalTo(Expression.string(type))
+            )
+            .execute()
+    }
 
     fun getDocument(documentId: String): MutableDocument {
         return db!!.getDocument(documentId)!!.toMutable()
