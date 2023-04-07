@@ -43,5 +43,9 @@ object AppPreferences {
         if (!pref.contains(R.string.groupTagFieldKey.toString())) {
             pref.edit().putString(R.string.groupTagFieldKey.toString(), groupTagField).apply()
         }
+
+        if (!pref.contains(R.string.demoListChoice.toString())) {
+            pref.edit().putInt(R.string.demoListChoice.toString(), 0).apply()
+        }
     }
 }

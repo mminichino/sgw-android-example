@@ -50,6 +50,11 @@ class PreferenceActivity : AppCompatActivity() {
                 R.string.databaseNameKey.toString(), ""))
         demoList = demoListString!!.split(",").map { it.trim() }
         tagList = tagListString!!.split(",").map { it.trim() }
+        val spinnerChoice = pref!!.getInt(R.string.demoListChoice.toString(), 0)
+        Log.i(TAG, "Auth IP    : ${serviceAddressInput!!.text}")
+        Log.i(TAG, "Gateway IP : ${gatewayAddressInput!!.text}")
+        Log.i(TAG, "Database   : ${databaseNameInput!!.text}")
+        Log.i(TAG, "Choice     : $spinnerChoice")
 
         spinner = findViewById(R.id.demoSelect)
         if (spinner != null) {
@@ -58,6 +63,7 @@ class PreferenceActivity : AppCompatActivity() {
                 R.layout.demo_spinner, demoList!!
             )
             spinner!!.adapter = adapter
+            spinner!!.setSelection(spinnerChoice)
 
             spinner!!.onItemSelectedListener = object :
                 AdapterView.OnItemSelectedListener {
@@ -68,6 +74,7 @@ class PreferenceActivity : AppCompatActivity() {
                     activeDemoInput = demoList!![position]
                     groupTagFieldInput = tagList!![position]
                     databaseNameInput!!.setText(activeDemoInput!!.toString())
+                    pref!!.edit().putInt(R.string.demoListChoice.toString(), position).apply()
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>) {

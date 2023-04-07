@@ -3,13 +3,12 @@ package com.example.sgwdemo.adjuster
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.couchbase.lite.MutableArray
@@ -125,12 +124,17 @@ class AdjusterMainActivity : AppCompatActivity() {
         val results: MutableList<String> = ArrayList()
 
         for (result in rs) {
-            Log.i(TAG, result.toString())
+            val thisDoc = result.getDictionary(0)
             val builder = StringBuilder()
+            val customerId = thisDoc!!.getString("customer_id").toString()
+            val customer = db.queryDB("customer_id", customerId, "customer")
+                .firstOrNull()?.getDictionary(0)
 
-            builder.append("Customer: ${result.getString("customer_id").toString()}")
+            builder.append("Claim ID: ${thisDoc.getString("claim_id")?.padStart(7, '0')}")
             builder.append("\n")
-            builder.append("Amount: ${result.getString("claim_amount")}")
+            builder.append("Customer: ${customer?.getString("name")}")
+            builder.append("\n")
+            builder.append("Phone   : ${customer?.getString("phone")}")
             results.add(builder.toString())
         }
 
@@ -139,6 +143,16 @@ class AdjusterMainActivity : AppCompatActivity() {
             android.R.layout.simple_list_item_1, results
         )
         listView!!.adapter = arrayAdapter
+//
+//        if (listView!!.adapter.count > 5) {
+//            val item: View = listView!!.adapter.getView(0, null, listView)
+//            item.measure(0, 0)
+//            val params = ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.MATCH_PARENT,
+//                (5.5 * item.measuredHeight).toInt()
+//            )
+//            listView!!.layoutParams = params
+//        }
 
 //        for (result in results) {
 //            val docsProps = result.getDictionary(0)

@@ -158,9 +158,8 @@ class CouchbaseConnect(context: Context) {
         return results.firstOrNull()?.getString("id")
     }
 
-    fun queryDB(field: String, value: String, type: String = ""): ResultSet {
-        var whereExpression = Expression.property(field)
-            .equalTo(Expression.string(value))
+    fun queryDB(where: String, value: String, type: String = ""): List<Result> {
+        var whereExpression = Expression.property(where).equalTo(Expression.string(value))
         if (type.isNotEmpty()) {
             whereExpression = whereExpression.and(Expression.property("type")
                 .equalTo(Expression.string(type)))
@@ -174,7 +173,7 @@ class CouchbaseConnect(context: Context) {
             .where(
                 whereExpression
             )
-            .execute()
+            .execute().allResults()
     }
 
     fun queryDBByType(type: String): ResultSet {

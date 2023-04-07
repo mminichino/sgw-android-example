@@ -27,6 +27,7 @@
     <string name="tagListKey">tag_list</string>
     <string name="activeDemoKey">active_demo</string>
     <string name="groupTagFieldKey">group_tag_field</string>
+    <string name="demoListChoice">demo_list_choice</string>
     <string name="zipCode">Zip:</string>
     <string name="databaseName">Database Name</string>
     <string name="clearButton">Clear App Data</string>
