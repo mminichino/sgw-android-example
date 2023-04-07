@@ -176,6 +176,25 @@ class CouchbaseConnect(context: Context) {
             .execute().allResults()
     }
 
+    fun queryDBDocID(where: String, value: String, type: String = ""): String? {
+        var whereExpression = Expression.property(where).equalTo(Expression.string(value))
+        if (type.isNotEmpty()) {
+            whereExpression = whereExpression.and(Expression.property("type")
+                .equalTo(Expression.string(type)))
+        }
+        replicationWait()
+        val rs = QueryBuilder
+            .select(
+                SelectResult.expression(Meta.id)
+            )
+            .from(DataSource.database(db!!))
+            .where(
+                whereExpression
+            )
+            .execute().allResults()
+        return rs.firstOrNull()?.getString("id")
+    }
+
     fun queryDBByType(type: String): ResultSet {
         replicationWait()
         return QueryBuilder

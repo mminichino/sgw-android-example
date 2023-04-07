@@ -28,6 +28,7 @@
         <activity android:name=".main.MainActivity" />
         <activity android:name=".preferences.PreferenceActivity" />
         <activity android:name=".adjuster.AdjusterMainActivity" />
+        <activity android:name=".adjuster.EditClaimActivity" />
     </application>
 
 </manifest>

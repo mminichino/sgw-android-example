@@ -8,35 +8,22 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.couchbase.lite.MutableArray
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
-import java.time.Instant
-import java.time.format.DateTimeFormatter
 
 
 class AdjusterMainActivity : AppCompatActivity() {
 
-    private var TAG = "CBL-Demo"
+    private var TAG = "AdjusterMain"
     private var cntx: Context = this
     var logoutButton: Button? = null
-    var dumpButton: Button? = null
-    var storeNumber: EditText? = null
-    var employeeID: EditText? = null
-    var textView: ListView? = null
     var listView: ListView? = null
     var documentCount: TextView? = null
     var userIdValue: String? = null
     var regionValue: String? = null
-    var employeeName: TextView? = null
-    var employeeEmail: TextView? = null
-    var employeeAddress: TextView? = null
-    var employeePhone: TextView? = null
-    var employeeZipCode: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,76 +39,12 @@ class AdjusterMainActivity : AppCompatActivity() {
         startCountUpdateThread(documentCount)
     }
 
-    fun onDisplayTapped(view: View?) {
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-
-        val store = storeNumber!!.text
-        val employee = employeeID!!.text
-        val arrayAdapter: ArrayAdapter<*>
-        val results: MutableList<String> = ArrayList()
-
-        if (store!!.isEmpty() || employee!!.isEmpty()) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Missing Values")
-            builder.setMessage("Please provide the store ID and employee ID")
-            builder.setPositiveButton("Ok") { dialog, which ->
-                Toast.makeText(
-                    applicationContext,
-                    "Ok", Toast.LENGTH_SHORT
-                ).show()
-            }
-            builder.show()
-        } else {
-            val time_now = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-            val rs = db.employeeLookup(store.toString(), employee.toString())
-            for (result in rs) {
-                val builder = StringBuilder()
-                val documentId = result.getString("id")
-                val timeCardArray = result.getArray("timecards")
-                val mutableTimeCardArray: MutableArray? = timeCardArray?.toMutable()
-
-                Log.i(TAG, "ID -> ${result.getString("id")}")
-                Log.i(TAG, "name -> ${result.getString("name")}")
-                Log.i(TAG, "employee_id -> ${result.getString("employee_id")}")
-
-                builder.append(result.getString("name").toString())
-                builder.append("\n")
-                builder.append("Employee ID: ${result.getString("employee_id")}")
-                results.add(builder.toString())
-
-                val mutableDoc = db.getDocument(documentId.toString())
-                    .setString("last_access", time_now.toString())
-                mutableTimeCardArray?.addString(time_now.toString())
-                mutableDoc.setArray("timecards", mutableTimeCardArray)
-                db.updateDocument(mutableDoc)
-            }
-
-            if (results.isEmpty()) {
-                val builder = AlertDialog.Builder(this)
-                builder.setTitle("Not Found")
-                builder.setMessage("The employee was not found")
-                builder.setPositiveButton("Ok") { dialog, which ->
-                    Toast.makeText(
-                        applicationContext,
-                        "Ok", Toast.LENGTH_SHORT
-                    ).show()
-                }
-                builder.show()
-            } else {
-                arrayAdapter = ArrayAdapter(
-                    this,
-                    android.R.layout.simple_list_item_1, results
-                )
-                textView!!.adapter = arrayAdapter
-            }
-        }
-    }
-
     fun createClaimList() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         val rs = db.queryDBByType("claim")
         val arrayAdapter: ArrayAdapter<*>
         val results: MutableList<String> = ArrayList()
+        val claimIdList: MutableList<String> = mutableListOf()
 
         for (result in rs) {
             val thisDoc = result.getDictionary(0)
@@ -130,7 +53,9 @@ class AdjusterMainActivity : AppCompatActivity() {
             val customer = db.queryDB("customer_id", customerId, "customer")
                 .firstOrNull()?.getDictionary(0)
 
-            builder.append("Claim ID: ${thisDoc.getString("claim_id")?.padStart(7, '0')}")
+            val claimId = thisDoc.getString("claim_id")
+            claimIdList.add(claimId!!)
+            builder.append("Claim ID: ${claimId?.padStart(7, '0')}")
             builder.append("\n")
             builder.append("Customer: ${customer?.getString("name")}")
             builder.append("\n")
@@ -143,39 +68,18 @@ class AdjusterMainActivity : AppCompatActivity() {
             android.R.layout.simple_list_item_1, results
         )
         listView!!.adapter = arrayAdapter
-//
-//        if (listView!!.adapter.count > 5) {
-//            val item: View = listView!!.adapter.getView(0, null, listView)
-//            item.measure(0, 0)
-//            val params = ViewGroup.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT,
-//                (5.5 * item.measuredHeight).toInt()
-//            )
-//            listView!!.layoutParams = params
-//        }
 
-//        for (result in results) {
-//            val docsProps = result.getDictionary(0)
-//            val dumpRow = TableRow(this)
-//            val dumpRowLabel = TextView(this)
-//            val dumpRowElement = TextView(this)
-//            val scale = resources.displayMetrics.density
-//            val dpAsPixels = (10 * scale)
-//
-//            val builder = StringBuilder()
-//            builder.append(docsProps!!.getString("claim_id").toString())
-//            builder.append(")")
-//            dumpRowLabel.setTextColor(Color.BLACK)
-//            dumpRowLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-//            dumpRowLabel.text = builder.toString()
-//            dumpRow.addView(dumpRowLabel)
-//            dumpRowElement.setTextColor(Color.BLACK)
-//            dumpRowElement.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-//            dumpRowElement.setPadding(dpAsPixels.toInt(), 0, 0, 0);
-//            dumpRowElement.text = docsProps.getString("customer_id").toString()
-//            dumpRow.addView(dumpRowElement)
-//            listView!!.addView(dumpRow)
-//        }
+        listView!!.setOnItemClickListener { _, _, position, _ ->
+            Log.i(TAG, "Click Position $position")
+            Log.i(TAG, "Claim IDs $claimIdList")
+            val intent = Intent(cntx, EditClaimActivity::class.java)
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            )
+            intent.putExtra("ClaimId", claimIdList[position])
+            startActivity(intent)
+        }
 
         if (results.isEmpty()) {
             val builder = AlertDialog.Builder(this)
@@ -210,28 +114,6 @@ class AdjusterMainActivity : AppCompatActivity() {
             }
         }
         Thread(runnable).start()
-    }
-
-    private fun populateEmployeeInfo(store: String, employee: String) {
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val rs = db.employeeLookup(store, employee)
-        val results = rs.allResults()
-        val docsProps = results.first().getDictionary(0)
-        val timeNow = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-
-        employeeName?.text = docsProps?.getString("name").toString()
-        employeeAddress?.text = docsProps?.getString("address").toString()
-        employeeEmail?.text = docsProps?.getString("email").toString()
-        employeePhone?.text = docsProps?.getString("phone").toString()
-        employeeZipCode?.text = docsProps?.getString("zip_code").toString()
-
-        val documentId = db.getDocId(employee)
-        val mutableTimeCardArray: MutableArray? = docsProps?.getArray("timecards")?.toMutable()
-        val mutableDoc = db.getDocument(documentId.toString())
-            .setString("last_access", timeNow.toString())
-        mutableTimeCardArray?.addString(timeNow.toString())
-        mutableDoc.setArray("timecards", mutableTimeCardArray)
-        db.updateDocument(mutableDoc)
     }
 
     fun onLogoutTapped(view: View?) {

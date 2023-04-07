@@ -37,4 +37,9 @@
     <string name="demoLabel">Demo:</string>
     <string name="demoListTitle" />
     <string name="claimsList">Open Claims:</string>
+    <string name="claimIdLabel">Claim ID:</string>
+    <string name="claimAmountLabel">Amount:</string>
+    <string name="claimDateLabel">Date:</string>
+    <string name="claimStatusLabel">Status:</string>
+    <string name="claimPaidLabel">Claim Paid:</string>
 </resources>
