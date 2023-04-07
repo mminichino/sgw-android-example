@@ -20,11 +20,19 @@
             android:textColor="@color/black" />
     </LinearLayout>
 
-    <ListView
-        android:id="@+id/listView"
-        android:layout_width="wrap_content"
-        android:layout_height="400dp"
-        android:dividerHeight="10dp"/>
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:orientation="horizontal">
+        <ListView
+            android:id="@+id/listView"
+            android:background="@drawable/list_rectangle"
+            android:layout_width="wrap_content"
+            android:layout_height="400dp"
+            android:dividerHeight="10dp"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="fill_parent"
