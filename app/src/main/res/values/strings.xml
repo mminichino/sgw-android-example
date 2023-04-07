@@ -42,4 +42,9 @@
     <string name="claimDateLabel">Date:</string>
     <string name="claimStatusLabel">Status:</string>
     <string name="claimPaidLabel">Claim Paid:</string>
+    <string name="rowClaimId">Claim ID:</string>
+    <string name="rowCustomer">Customer:</string>
+    <string name="rowPhone">Phone:</string>
+    <string name="rowAmount">Amount:</string>
+    <string name="rowStatus">Status:</string>
 </resources>

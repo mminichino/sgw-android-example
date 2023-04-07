@@ -18,7 +18,7 @@ class EditClaimActivity : AppCompatActivity() {
     var claimAmountInput: EditText? = null
     var claimId: String? = null
     var documentId: String? = null
-    var claimStatus: Int? = null
+    var claimStatus: Int = 0
     var claimIdView: TextView? = null
     var claimDateView: TextView? = null
     var claimPaidView: TextView? = null
@@ -80,6 +80,7 @@ class EditClaimActivity : AppCompatActivity() {
 
         val mutableDoc = db.getDocument(documentId.toString())
             .setFloat("claim_amount", claimAmount)
+            .setInt("claim_status", claimStatus)
         db.updateDocument(mutableDoc)
 
         val intent = Intent(cntx, AdjusterMainActivity::class.java)

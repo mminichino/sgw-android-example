@@ -45,6 +45,7 @@ class AdjusterMainActivity : AppCompatActivity() {
         val arrayAdapter: ArrayAdapter<*>
         val results: MutableList<String> = ArrayList()
         val claimIdList: MutableList<String> = mutableListOf()
+        val claimList: ArrayList<ClaimModel> = ArrayList()
 
         for (result in rs) {
             val thisDoc = result.getDictionary(0)
@@ -54,20 +55,26 @@ class AdjusterMainActivity : AppCompatActivity() {
                 .firstOrNull()?.getDictionary(0)
 
             val claimId = thisDoc.getString("claim_id")
+            val customerName = customer?.getString("name")
+            val customerPhone = customer?.getString("phone")
+            val claimAmount = thisDoc.getFloat("claim_amount").toString()
+            val claimStatus = convertStatusId(thisDoc.getInt("claim_status"))
             claimIdList.add(claimId!!)
-            builder.append("Claim ID: ${claimId?.padStart(7, '0')}")
-            builder.append("\n")
-            builder.append("Customer: ${customer?.getString("name")}")
-            builder.append("\n")
-            builder.append("Phone   : ${customer?.getString("phone")}")
-            results.add(builder.toString())
+            claimList.add(ClaimModel(claimId, customerName!!, customerPhone!!, claimAmount, claimStatus))
+//            builder.append("Claim ID: ${claimId?.padStart(7, '0')}")
+//            builder.append("\n")
+//            builder.append("Customer: ${customer?.getString("name")}")
+//            builder.append("\n")
+//            builder.append("Phone   : ${customer?.getString("phone")}")
+//            results.add(builder.toString())
         }
 
-        arrayAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_list_item_1, results
-        )
-        listView!!.adapter = arrayAdapter
+//        arrayAdapter = ArrayAdapter(
+//            this,
+//            android.R.layout.simple_list_item_1, results
+//        )
+        val adapter = ClaimAdapter(this, claimList)
+        listView!!.adapter = adapter
 
         listView!!.setOnItemClickListener { _, _, position, _ ->
             Log.i(TAG, "Click Position $position")
@@ -81,7 +88,7 @@ class AdjusterMainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        if (results.isEmpty()) {
+        if (claimList.isEmpty()) {
             val builder = AlertDialog.Builder(this)
             builder.setTitle("No Data")
             builder.setMessage("The database is empty")
@@ -92,6 +99,14 @@ class AdjusterMainActivity : AppCompatActivity() {
                 ).show()
             }
             builder.show()
+        }
+    }
+
+    private fun convertStatusId(id: Int) : String {
+        return if (id == 0) {
+            "Open"
+        } else {
+            "Complete"
         }
     }
 

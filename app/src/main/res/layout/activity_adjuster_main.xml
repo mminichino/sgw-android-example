@@ -14,9 +14,9 @@
             android:id="@+id/listViewTitle"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:padding="5dp"
+            android:padding="10dp"
             android:text="@string/claimsList"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:textColor="@color/black" />
     </LinearLayout>
 
