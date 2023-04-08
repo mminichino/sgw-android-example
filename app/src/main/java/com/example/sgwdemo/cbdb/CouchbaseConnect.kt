@@ -70,7 +70,11 @@ class CouchbaseConnect(context: Context) {
                 "DemoIndex",
                 IndexBuilder.valueIndex(
                     ValueIndexItem.property("store_id"),
-                    ValueIndexItem.property("employee_id")
+                    ValueIndexItem.property("employee_id"),
+                    ValueIndexItem.property("type"),
+                    ValueIndexItem.property("region"),
+                    ValueIndexItem.property("claim_id"),
+                    ValueIndexItem.property("customer_id")
                 )
             )
         } catch (e: CouchbaseLiteException) {

@@ -3,12 +3,13 @@ package com.example.sgwdemo.adjuster
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class EditClaimActivity : AppCompatActivity() {
@@ -41,13 +42,20 @@ class EditClaimActivity : AppCompatActivity() {
         claimIdView!!.text = claim!!.getString("claim_id")
         val claimAmount = claim.getFloat("claim_amount")
         claimAmountInput!!.setText(claimAmount.toString())
-        claimDateView!!.text = claim.getString("claim_date")
+
+        val dateString = claim.getString("claim_date")
+        val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
+        val writeFormat = SimpleDateFormat("M/d/yy", Locale.US)
+        val date = readFormat.parse(dateString!!)
+        claimDateView!!.text = writeFormat.format(date!!)
+
         val claimPaid: Boolean = claim.getBoolean("claim_paid")
         if (claimPaid) {
             "Paid".also { claimPaidView!!.text = it }
         } else {
             "Not Paid".also { claimPaidView!!.text = it }
         }
+
         claimStatus = claim.getInt("claim_status")
 
         spinner = findViewById(R.id.claimStatus)
