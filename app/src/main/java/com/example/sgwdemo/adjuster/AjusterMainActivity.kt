@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
+import com.google.android.material.progressindicator.CircularProgressIndicator
 
 
 class AdjusterMainActivity : AppCompatActivity() {
@@ -24,6 +25,7 @@ class AdjusterMainActivity : AppCompatActivity() {
     var documentCount: TextView? = null
     var userIdValue: String? = null
     var regionValue: String? = null
+    var progress: CircularProgressIndicator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +36,7 @@ class AdjusterMainActivity : AppCompatActivity() {
         logoutButton = findViewById(R.id.logoutButton)
         listView = findViewById(R.id.listView)
         documentCount = findViewById(R.id.documentCount)
+        progress = findViewById(R.id.progressBarLoadWait)
 
         createClaimList()
         startCountUpdateThread(documentCount)
@@ -42,14 +45,13 @@ class AdjusterMainActivity : AppCompatActivity() {
     fun createClaimList() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         val rs = db.queryDBByType("claim")
-        val arrayAdapter: ArrayAdapter<*>
-        val results: MutableList<String> = ArrayList()
         val claimIdList: MutableList<String> = mutableListOf()
         val claimList: ArrayList<ClaimModel> = ArrayList()
 
+        progress!!.visibility = View.VISIBLE
+
         for (result in rs) {
             val thisDoc = result.getDictionary(0)
-            val builder = StringBuilder()
             val customerId = thisDoc!!.getString("customer_id").toString()
             val customer = db.queryDB("customer_id", customerId, "customer")
                 .firstOrNull()?.getDictionary(0)
@@ -61,18 +63,8 @@ class AdjusterMainActivity : AppCompatActivity() {
             val claimStatus = convertStatusId(thisDoc.getInt("claim_status"))
             claimIdList.add(claimId!!)
             claimList.add(ClaimModel(claimId, customerName!!, customerPhone!!, claimAmount, claimStatus))
-//            builder.append("Claim ID: ${claimId?.padStart(7, '0')}")
-//            builder.append("\n")
-//            builder.append("Customer: ${customer?.getString("name")}")
-//            builder.append("\n")
-//            builder.append("Phone   : ${customer?.getString("phone")}")
-//            results.add(builder.toString())
         }
 
-//        arrayAdapter = ArrayAdapter(
-//            this,
-//            android.R.layout.simple_list_item_1, results
-//        )
         val adapter = ClaimAdapter(this, claimList)
         listView!!.adapter = adapter
 
@@ -87,6 +79,8 @@ class AdjusterMainActivity : AppCompatActivity() {
             intent.putExtra("ClaimId", claimIdList[position])
             startActivity(intent)
         }
+
+        progress!!.visibility = View.INVISIBLE
 
         if (claimList.isEmpty()) {
             val builder = AlertDialog.Builder(this)

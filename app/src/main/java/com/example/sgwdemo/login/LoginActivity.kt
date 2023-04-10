@@ -127,21 +127,26 @@ class LoginActivity : AppCompatActivity() {
                 t.printStackTrace()
                 showMessageDialog("Error",
                     "Authorization Service Unavailable")
+                progress!!.visibility = View.INVISIBLE
             }
 
             override fun onResponse(call: Call<SessionResponse>, response: Response<SessionResponse>) {
                 if (response.isSuccessful) {
+                    val groupTag = response.body()!!.group
+
                     Log.d(TAG, "Session : " + response.body()!!.session_id)
                     Log.d(TAG, "Cookie  : " + response.body()!!.cookie_name)
                     Log.d(TAG, "Demo    : $activeDemo")
+                    Log.d(TAG, "Group   : $groupTag")
 
-                    val groupTag = response.body()!!.group
+                    progress!!.visibility = View.INVISIBLE
+
                     setupDb(
                         groupTagField!!, groupTag,
                         response.body()!!.cookie_name, response.body()!!.session_id
                     )
 
-                    if (activeDemo === "employees") {
+                    if (activeDemo == "employees") {
                         val intent = Intent(cntx, MainActivity::class.java)
                         intent.addFlags(
                             Intent.FLAG_ACTIVITY_NEW_TASK
@@ -164,7 +169,6 @@ class LoginActivity : AppCompatActivity() {
                     showMessageDialog("Unauthorized",
                         "Login was not successful")
                 }
-                progress!!.visibility = View.INVISIBLE
             }
         })
     }
