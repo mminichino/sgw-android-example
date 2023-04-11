@@ -1,8 +1,8 @@
-# Couchbase Android Sync Gateway Demo 2.1
+# Couchbase Android Sync Gateway Demo 3.0
 
 Clone into Android Studio.
 
-The password for all employees is "password". To reset and start from scratch, use the "Clear App Data" button in the Settings activity (Note: the app will exit - this is expected).
+The password for all users is "password". To reset and start from scratch, use the "Clear App Data" button in the Settings activity (Note: the app will exit - this is expected).
 ![Usage](doc/usage-1.jpg)
 ![Usage](doc/usage-2.jpg)
 ![Architecture](doc/architecture-1.jpg)
@@ -12,9 +12,9 @@ The password for all employees is "password". To reset and start from scratch, u
 ![Access](doc/access-4.jpg)
 ![Login](doc/login-1.jpg)
 
-## Backend Container
+## Employee Backend Container
 
-To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components use the [empdemo](https://hub.docker.com/r/mminichino/empdemo) container.
+To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the employee demo use the [empdemo](https://hub.docker.com/r/mminichino/empdemo) container.
 You can obtain a [helper utility](https://github.com/mminichino/employee-demo-container/releases/download/2.1.3/rundemo.sh) to run and manage the container.
 Run the following to download the utility:
 ```
@@ -22,6 +22,17 @@ curl -L -O https://github.com/mminichino/employee-demo-container/releases/downlo
 ```
 To build the container yourself, you can access the source here: [employee-demo-container](https://github.com/mminichino/employee-demo-container).
 
+## Adjuster Backend Container
+
+To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the adjuster demo use the [adjdemo](https://hub.docker.com/r/mminichino/adjdemo) container.
+You can obtain a [helper utility](https://github.com/mminichino/adjuster-demo-container/releases/download/1.0.1/rundemo.sh) to run and manage the container.
+Run the following to download the utility:
+```
+curl -L -O https://github.com/mminichino/adjuster-demo-container/releases/download/1.0.1/rundemo.sh
+```
+To build the container yourself, you can access the source here: [adjuster-demo-container](https://github.com/mminichino/adjuster-demo-container).
+
+### Notes
 If you run the container on the same system running Android Studio (such as your desktop) use the system's IP address, not localhost (127.0.0.1).
 
 To look at the documents in the database and their assigned channels, get a shell into the container and use the SGW CLI to dump the database:
