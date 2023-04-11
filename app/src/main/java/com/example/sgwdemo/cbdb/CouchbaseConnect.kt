@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.R
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import java.net.URI
 
 
@@ -89,7 +91,6 @@ class CouchbaseConnect(context: Context) {
                 database = db,
                 target = URLEndpoint(URI(connectString)),
                 type = ReplicatorType.PUSH_AND_PULL,
-//                authenticator = BasicAuthenticator(username, password!!.toCharArray()),
                 authenticator = SessionAuthenticator(session, cookie),
                 continuous = true
             )
@@ -112,6 +113,7 @@ class CouchbaseConnect(context: Context) {
 
         replicator!!.start()
         dbOpen = true
+        replicationWait()
     }
 
     fun isDbOpen(): Boolean {
@@ -199,7 +201,7 @@ class CouchbaseConnect(context: Context) {
         return rs.firstOrNull()?.getString("id")
     }
 
-    fun queryDBByType(type: String): ResultSet {
+    fun queryDBByType(type: String, orderBy: String): ResultSet {
         replicationWait()
         return QueryBuilder
             .select(
@@ -210,6 +212,7 @@ class CouchbaseConnect(context: Context) {
                 Expression.property("type")
                     .equalTo(Expression.string(type))
             )
+            .orderBy(Ordering.property(orderBy))
             .execute()
     }
 

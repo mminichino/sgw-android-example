@@ -44,7 +44,7 @@ class AdjusterMainActivity : AppCompatActivity() {
 
     fun createClaimList() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val rs = db.queryDBByType("claim")
+        val rs = db.queryDBByType("claim", "claim_id")
         val claimIdList: MutableList<String> = mutableListOf()
         val claimList: ArrayList<ClaimModel> = ArrayList()
 
