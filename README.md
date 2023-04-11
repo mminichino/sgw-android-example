@@ -76,8 +76,12 @@ Key: employees:9 Id: employees:9 Channels: ['channel.store_id@1']
 See [Sync Gateway CLI](https://github.com/mminichino/sgwcli) for details on using this utility.
 
 The config.properties file contains default values that are imported when the app is first run.
-| Property     | Description                                                    |
-|--------------|----------------------------------------------------------------|
-| sgwhost      | Hostname or IP address for Sync Gateway                        |
-| database     | Database name configured in Sync Gateway                       |
-| authEndpoint | Hostname or IP address for Auth Microservice                   |
+| Property      | Description                                                    |
+|---------------|----------------------------------------------------------------|
+| sgwhost       | Hostname or IP address for Sync Gateway                        |
+| database      | Database name configured in Sync Gateway                       |
+| authEndpoint  | Hostname or IP address for Auth Microservice                   |
+| demoList      | List of demos (employees,adjuster)                             |
+| tagList       | List of group tags (store_id,region)                           |
+| activeDemo    | Default demo (employees)                                       |
+| groupTagField | Default group ID field (store_id)                              |
