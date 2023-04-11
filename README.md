@@ -3,10 +3,14 @@
 Clone into Android Studio.
 
 The password for all employees is "password". To reset and start from scratch, use the "Clear App Data" button in the Settings activity (Note: the app will exit - this is expected).
-![Usage](doc/usage.jpg)
-![Architecture](doc/architecture.jpg)
-![Access](doc/access.jpg)
-![Login](doc/login.jpg)
+![Usage](doc/usage-1.jpg)
+![Usage](doc/usage-2.jpg)
+![Architecture](doc/architecture-1.jpg)
+![Access](doc/access-1.jpg)
+![Access](doc/access-2.jpg)
+![Access](doc/access-3.jpg)
+![Access](doc/access-4.jpg)
+![Login](doc/login-1.jpg)
 
 ## Backend Container
 
