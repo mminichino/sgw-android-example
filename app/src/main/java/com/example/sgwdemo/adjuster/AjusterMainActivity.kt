@@ -13,7 +13,10 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
+import com.example.sgwdemo.models.ClaimGrid
 import com.google.android.material.progressindicator.CircularProgressIndicator
+import kotlinx.coroutines.*
+import java.lang.Runnable
 
 
 class AdjusterMainActivity : AppCompatActivity() {
@@ -42,57 +45,40 @@ class AdjusterMainActivity : AppCompatActivity() {
         startCountUpdateThread(documentCount)
     }
 
-    fun createClaimList() {
+    private fun createClaimList() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val rs = db.queryDBByType("claim", "claim_id")
-        val claimIdList: MutableList<String> = mutableListOf()
-        val claimList: ArrayList<ClaimModel> = ArrayList()
+        val scope = CoroutineScope(Dispatchers.Default)
+        var claims: ArrayList<ClaimGrid>
 
-        progress!!.visibility = View.VISIBLE
+        scope.launch {
+            claims = db.queryClaims()
+            withContext(Dispatchers.Main) {
+                val adapter = ClaimAdapter(cntx, claims)
+                listView!!.adapter = adapter
 
-        for (result in rs) {
-            val thisDoc = result.getDictionary(0)
-            val customerId = thisDoc!!.getString("customer_id").toString()
-            val customer = db.queryDB("customer_id", customerId, "customer")
-                .firstOrNull()?.getDictionary(0)
+                listView!!.setOnItemClickListener { _, _, position, _ ->
+                    val intent = Intent(cntx, EditClaimActivity::class.java)
+                    intent.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                                or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    )
+                    intent.putExtra("ClaimId", claims[position].claimId)
+                    startActivity(intent)
+                }
 
-            val claimId = thisDoc.getString("claim_id")
-            val customerName = customer?.getString("name")
-            val customerPhone = customer?.getString("phone")
-            val claimAmount = thisDoc.getFloat("claim_amount").toString()
-            val claimStatus = convertStatusId(thisDoc.getInt("claim_status"))
-            claimIdList.add(claimId!!)
-            claimList.add(ClaimModel(claimId, customerName!!, customerPhone!!, claimAmount, claimStatus))
-        }
-
-        val adapter = ClaimAdapter(this, claimList)
-        listView!!.adapter = adapter
-
-        listView!!.setOnItemClickListener { _, _, position, _ ->
-            Log.i(TAG, "Click Position $position")
-            Log.i(TAG, "Claim IDs $claimIdList")
-            val intent = Intent(cntx, EditClaimActivity::class.java)
-            intent.addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK
-                        or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            )
-            intent.putExtra("ClaimId", claimIdList[position])
-            startActivity(intent)
-        }
-
-        progress!!.visibility = View.INVISIBLE
-
-        if (claimList.isEmpty()) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("No Data")
-            builder.setMessage("The database is empty")
-            builder.setPositiveButton("Ok") { dialog, which ->
-                Toast.makeText(
-                    applicationContext,
-                    "Ok", Toast.LENGTH_SHORT
-                ).show()
+                if (claims.isEmpty()) {
+                    val builder = AlertDialog.Builder(cntx)
+                    builder.setTitle("No Data")
+                    builder.setMessage("The database is empty")
+                    builder.setPositiveButton("Ok") { dialog, which ->
+                        Toast.makeText(
+                            applicationContext,
+                            "Ok", Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    builder.show()
+                }
             }
-            builder.show()
         }
     }
 

@@ -5,8 +5,12 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.R
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import com.example.sgwdemo.models.ClaimGrid
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+//import kotlinx.serialization.decodeFromString
+//import kotlinx.serialization.json.Json
 import java.net.URI
 
 
@@ -214,6 +218,49 @@ class CouchbaseConnect(context: Context) {
             )
             .orderBy(Ordering.property(orderBy))
             .execute()
+    }
+
+    suspend fun queryClaims(): ArrayList<ClaimGrid> {
+        return withContext(Dispatchers.IO) {
+            Log.i(TAG, "Begin Claim Query")
+            val claims = arrayListOf<ClaimGrid>()
+            try {
+                val query = QueryBuilder
+                    .select(
+                        SelectResult.expression(Expression.property("claim_id").from("claim")),
+                        SelectResult.expression(Expression.property("name").from("customer")),
+                        SelectResult.expression(Expression.property("phone").from("customer")),
+                        SelectResult.expression(Expression.property("claim_amount").from("claim")),
+                        SelectResult.expression(Expression.property("claim_status").from("claim")),
+                    )
+                    .from(DataSource.database(db!!).`as`("claim"))
+                    .join(
+                        Join.join(DataSource.database(db!!).`as`("customer"))
+                            .on(
+                                Expression.property("customer_id").from("claim")
+                                    .equalTo(Expression.property("customer_id").from("customer"))
+                            )
+                    )
+                    .where(
+                        Expression.property("type").from("claim").equalTo(Expression.string("claim"))
+                            .and(
+                                Expression.property("type").from("customer").equalTo(Expression.string("customer"))
+                            )
+                    )
+                    .orderBy(Ordering.expression(Expression.property("claim_id").from("claim")))
+                query.execute().allResults().forEach { item ->
+                    val gson = Gson()
+                    val json = item.toJSON()
+                    Log.i(TAG, "Item : $json")
+                    val claim = gson.fromJson(json, ClaimGrid::class.java)
+                    Log.i(TAG, "Found Claim: ${claim.claimId}")
+                    claims.add(claim)
+                }
+            } catch (e: Exception){
+                Log.e(e.message, e.stackTraceToString())
+            }
+            return@withContext claims
+        }
     }
 
     fun getDocument(documentId: String): MutableDocument {

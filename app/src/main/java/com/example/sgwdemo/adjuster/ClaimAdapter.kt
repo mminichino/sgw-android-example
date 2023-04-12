@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
 import com.example.sgwdemo.R
-import com.example.sgwdemo.adjuster.ClaimModel
+import com.example.sgwdemo.models.ClaimGrid
 
-class ClaimAdapter(private val context: Context, private val arrayList: ArrayList<ClaimModel>) : BaseAdapter() {
+class ClaimAdapter(context: Context, private val arrayList: ArrayList<ClaimGrid>) : BaseAdapter() {
     private val inflater: LayoutInflater
             = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
     private lateinit var claimId: TextView
@@ -34,13 +34,13 @@ class ClaimAdapter(private val context: Context, private val arrayList: ArrayLis
         amount = rowView.findViewById(R.id.rowAmount)
         status = rowView.findViewById(R.id.rowStatus)
 
-        val claim = getItem(position) as ClaimModel
+        val claim = getItem(position) as ClaimGrid
 
         claimId.text = claim.claimId
-        customer.text = claim.customer
-        phone.text = claim.phone
-        amount.text = claim.amount
-        status.text = claim.status
+        customer.text = claim.customerName
+        phone.text = claim.customerPhone
+        amount.text = claim.claimAmount.toString()
+        status.text = claim.claimStatus.toString()
 
         return rowView
     }
