@@ -7,10 +7,9 @@ import com.couchbase.lite.*
 import com.example.sgwdemo.R
 import com.example.sgwdemo.models.ClaimGrid
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-//import kotlinx.serialization.decodeFromString
-//import kotlinx.serialization.json.Json
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.*
 import java.net.URI
 
 
@@ -41,15 +40,15 @@ open class CouchbaseConnectHolder<out T: Any, in A>(creator: (A) -> T) {
 
 class CouchbaseConnect(context: Context) {
 
-    private var TAG = "CBL-Demo"
+    private var TAG = "CouchbaseConnect"
     private var cntx: Context = context
     var db: Database? = null
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
     var connectString: String? = null
     var dbOpen: Boolean = false
-    var replicatorBusy: Boolean = false
-    var replicatorConnecting: Boolean = false
+    val replicationStatus: MutableState<String> = mutableStateOf("")
+    val replicationProgress: MutableState<String> = mutableStateOf("Not Started")
     val pref: SharedPreferences =
         context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
@@ -61,6 +60,7 @@ class CouchbaseConnect(context: Context) {
 
         connectString = "ws://$gatewayAddress:4984/$databaseName"
         Log.i(TAG, "DB init -> $connectString")
+        replicationStatus.value = ReplicationStatus.UNINITIALIZED
 
         CouchbaseLite.init(cntx)
     }
@@ -90,6 +90,7 @@ class CouchbaseConnect(context: Context) {
 
     fun syncDatabase(session: String, cookie: String) {
         Log.i(TAG, "DB Session Cookie -> $cookie")
+
         replicator = Replicator(
             ReplicatorConfigurationFactory.create(
                 database = db,
@@ -102,16 +103,40 @@ class CouchbaseConnect(context: Context) {
 
         listenerToken = replicator!!.addChangeListener { change ->
             val err = change.status.error
+
             if (err != null) {
-                Log.i(TAG, "Error code ::  ${err.code}")
+                Log.i(TAG, "Error ${err.code} : ${err.message}")
             }
-            replicatorBusy = change.status.activityLevel === ReplicatorActivityLevel.BUSY
-            replicatorConnecting =
-                change.status.activityLevel === ReplicatorActivityLevel.CONNECTING
-            if (!replicatorBusy && !replicatorConnecting) {
-                val total = change.status.progress.total
-                val completed = change.status.progress.completed
-                Log.i(TAG, "Replication progress => total = $total completed = $completed")
+
+            when (change.status.activityLevel) {
+                ReplicatorActivityLevel.OFFLINE -> {
+                    replicationStatus.value = ReplicationStatus.OFFLINE
+                    Log.i(TAG, "Replication Status OFFLINE")
+                }
+                ReplicatorActivityLevel.IDLE -> {
+                    replicationStatus.value = ReplicationStatus.IDlE
+                    Log.i(TAG,"Replication Status IDLE")
+                }
+                ReplicatorActivityLevel.STOPPED -> {
+                    replicationStatus.value = ReplicationStatus.STOPPED
+                    Log.i(TAG,"Replication Status STOPPED")
+                }
+                ReplicatorActivityLevel.BUSY -> {
+                    replicationStatus.value = ReplicationStatus.BUSY
+                    Log.i(TAG,"Replication Status BUSY")
+                }
+                ReplicatorActivityLevel.CONNECTING -> {
+                    replicationStatus.value = ReplicationStatus.CONNECTING
+                    Log.i(TAG,"Replication Status CONNECTING")
+                }
+            }
+
+            if (change.status.progress.completed == change.status.progress.total || change.status.progress.completed.toInt() == 0) {
+                replicationProgress.value = "Completed"
+                Log.i(TAG,"Replication Status COMPLETED")
+            } else {
+                replicationProgress.value =
+                    "${change.status.progress.total / change.status.progress.completed}"
             }
         }
 
@@ -251,9 +276,7 @@ class CouchbaseConnect(context: Context) {
                 query.execute().allResults().forEach { item ->
                     val gson = Gson()
                     val json = item.toJSON()
-                    Log.i(TAG, "Item : $json")
                     val claim = gson.fromJson(json, ClaimGrid::class.java)
-                    Log.i(TAG, "Found Claim: ${claim.claimId}")
                     claims.add(claim)
                 }
             } catch (e: Exception){
@@ -275,9 +298,12 @@ class CouchbaseConnect(context: Context) {
         return db!!.count.toString()
     }
 
-    fun replicationWait() {
-        if (replicatorBusy || replicatorConnecting) {
-            Thread.sleep(100)
+    private fun replicationWait() {
+        val scope = CoroutineScope(Dispatchers.Default)
+        scope.launch {
+            while (replicationProgress.value != "Completed") {
+                delay(100)
+            }
         }
     }
 
@@ -299,4 +325,13 @@ class CouchbaseConnect(context: Context) {
             replicator!!.removeChangeListener(listenerToken!!)
         }
     }
+}
+
+object ReplicationStatus {
+    const val STOPPED = "Stopped"
+    const val OFFLINE = "Offline"
+    const val IDlE = "Idle"
+    const val BUSY = "Busy"
+    const val CONNECTING = "Connecting"
+    const val UNINITIALIZED = "Not Initialized"
 }
