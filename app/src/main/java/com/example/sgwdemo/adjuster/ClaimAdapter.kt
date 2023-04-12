@@ -26,6 +26,13 @@ class ClaimAdapter(context: Context, private val arrayList: ArrayList<ClaimGrid>
     override fun getItemId(position: Int): Long {
         return position.toLong()
     }
+    private fun convertStatusId(id: Int) : String {
+        return if (id == 0) {
+            "Open"
+        } else {
+            "Complete"
+        }
+    }
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
         val rowView = convertView ?: inflater.inflate(R.layout.claim_row, parent, false)
         claimId = rowView.findViewById(R.id.rowClaimId)
@@ -40,7 +47,7 @@ class ClaimAdapter(context: Context, private val arrayList: ArrayList<ClaimGrid>
         customer.text = claim.customerName
         phone.text = claim.customerPhone
         amount.text = claim.claimAmount.toString()
-        status.text = claim.claimStatus.toString()
+        status.text = convertStatusId(claim.claimStatus)
 
         return rowView
     }

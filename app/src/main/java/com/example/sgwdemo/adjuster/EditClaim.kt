@@ -8,6 +8,10 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,51 +35,57 @@ class EditClaimActivity : AppCompatActivity() {
         val claimStatusList = arrayOf<String>("Open", "Closed")
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         claimId = intent.getStringExtra("ClaimId")
-        val claim = db.queryDB("claim_id", claimId!!, "claim")
-            .firstOrNull()?.getDictionary(0)
+        val scope = CoroutineScope(Dispatchers.Default)
 
-        claimIdView = findViewById(R.id.claimId)
-        claimAmountInput = findViewById(R.id.claimAmount)
-        claimDateView = findViewById(R.id.claimDate)
-        claimPaidView = findViewById(R.id.claimPaid)
+        scope.launch {
+            val claim = db.getClaimById("claim::${claimId}")
 
-        claimIdView!!.text = claim!!.getString("claim_id")
-        val claimAmount = claim.getFloat("claim_amount")
-        claimAmountInput!!.setText(claimAmount.toString())
+            withContext(Dispatchers.Main) {
 
-        val dateString = claim.getString("claim_date")
-        val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
-        val writeFormat = SimpleDateFormat("M/d/yy", Locale.US)
-        val date = readFormat.parse(dateString!!)
-        claimDateView!!.text = writeFormat.format(date!!)
+                claimIdView = findViewById(R.id.claimId)
+                claimAmountInput = findViewById(R.id.claimAmount)
+                claimDateView = findViewById(R.id.claimDate)
+                claimPaidView = findViewById(R.id.claimPaid)
 
-        val claimPaid: Boolean = claim.getBoolean("claim_paid")
-        if (claimPaid) {
-            "Paid".also { claimPaidView!!.text = it }
-        } else {
-            "Not Paid".also { claimPaidView!!.text = it }
-        }
+                claimIdView!!.text = claim.claimId
+                claimAmountInput!!.setText(claim.claimAmount.toString())
 
-        claimStatus = claim.getInt("claim_status")
+                val dateString = claim.claimDate
+                val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
+                val writeFormat = SimpleDateFormat("M/d/yy", Locale.US)
+                val date = readFormat.parse(dateString)
+                claimDateView!!.text = writeFormat.format(date!!)
 
-        spinner = findViewById(R.id.claimStatus)
-        if (spinner != null) {
-            val adapter = ArrayAdapter(
-                this,
-                R.layout.demo_spinner, claimStatusList
-            )
-            spinner!!.adapter = adapter
-            spinner!!.setSelection(claimStatus!!)
-
-            spinner!!.onItemSelectedListener = object :
-                AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                    claimStatus = position
+                val claimPaid: Boolean = claim.claimPaid
+                if (claimPaid) {
+                    "Paid".also { claimPaidView!!.text = it }
+                } else {
+                    "Not Paid".also { claimPaidView!!.text = it }
                 }
 
-                override fun onNothingSelected(parent: AdapterView<*>) {
-                    claimStatus = claim.getInt("claim_status")
+                claimStatus = claim.claimStatus
+
+                spinner = findViewById(R.id.claimStatus)
+                if (spinner != null) {
+                    val adapter = ArrayAdapter(
+                        cntx,
+                        R.layout.demo_spinner, claimStatusList
+                    )
+                    spinner!!.adapter = adapter
+                    spinner!!.setSelection(claimStatus)
+
+                    spinner!!.onItemSelectedListener = object :
+                        AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>, view: View, position: Int, id: Long
+                        ) {
+                            claimStatus = position
+                        }
+
+                        override fun onNothingSelected(parent: AdapterView<*>) {
+                            claimStatus = claim.claimStatus
+                        }
+                    }
                 }
             }
         }
@@ -83,7 +93,7 @@ class EditClaimActivity : AppCompatActivity() {
 
     fun onSaveTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        documentId = db.queryDBDocID("claim_id", claimId!!, "claim")
+        documentId = "claim::${claimId}"
         val claimAmount = claimAmountInput!!.text.toString().toFloat()
 
         val mutableDoc = db.getDocument(documentId.toString())

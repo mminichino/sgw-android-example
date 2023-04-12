@@ -1,23 +1,29 @@
 package com.example.sgwdemo.models
 
-import androidx.annotation.Keep
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Keep
-@Serializable
-data class ClaimDao(var item: Claim)
-
-@Keep
-@Serializable
 data class Claim (
-    val adjusterId: Int,
-    val claimAmount: Float,
-    val claimData: String,
-    val claimId: String,
-    val claimPaid: Boolean,
-    val claimStatus: Int,
-    val customerId: String,
-    val recordId: Int,
-    val region: String,
-    val type: String
+    @SerializedName("adjuster_id") val adjusterId: Int,
+    @SerializedName("claim_amount") val claimAmount: Float,
+    @SerializedName("claim_date") val claimDate: String,
+    @SerializedName("claim_id") val claimId: String,
+    @SerializedName("claim_paid") val claimPaid: Boolean,
+    @SerializedName("claim_status") val claimStatus: Int,
+    @SerializedName("customer_id") val customerId: String,
+    @SerializedName("record_id") val recordId: Int,
+    @SerializedName("region") val region: String,
+    @SerializedName("type") val type: String
+    ) {
+    constructor() : this(
+        0,
+        0.0F,
+        "",
+        "",
+        false,
+        0,
+        "",
+        0,
+        "",
+        "null"
     )
+}

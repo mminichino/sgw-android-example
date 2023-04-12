@@ -6,6 +6,7 @@ import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.R
 import com.example.sgwdemo.models.ClaimGrid
+import com.example.sgwdemo.models.Claim
 import com.google.gson.Gson
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ class CouchbaseConnect(context: Context) {
 
     private var TAG = "CouchbaseConnect"
     private var cntx: Context = context
+    val gson = Gson()
     var db: Database? = null
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
@@ -288,6 +290,26 @@ class CouchbaseConnect(context: Context) {
 
     fun getDocument(documentId: String): MutableDocument {
         return db!!.getDocument(documentId)!!.toMutable()
+    }
+
+    suspend fun getClaimById(documentId: String): Claim {
+        var claim = Claim()
+        return withContext(Dispatchers.IO) {
+            try {
+                db?.let { database ->
+                    val doc = database.getDocument(documentId)
+                    doc?.let { document ->
+                        val json = document.toJSON()
+                        json?.let {
+                            claim = gson.fromJson(json, Claim::class.java)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(e.message, e.stackTraceToString())
+            }
+            return@withContext claim
+        }
     }
 
     fun updateDocument(doc: MutableDocument) {
