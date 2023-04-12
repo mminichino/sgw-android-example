@@ -3,12 +3,10 @@ package com.example.sgwdemo.main
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.util.TypedValue
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -16,20 +14,22 @@ import com.couchbase.lite.MutableArray
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
+import com.example.sgwdemo.models.Employee
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 
 class MainActivity : AppCompatActivity() {
 
-    private var TAG = "CBL-Demo"
+    private var TAG = "MainActivity"
     private var cntx: Context = this
     var showButton: Button? = null
     var dumpButton: Button? = null
-    var storeNumber: EditText? = null
-    var employeeID: EditText? = null
-    var textView: ListView? = null
-    var dumpView: TableLayout? = null
+    var dumpView: ListView? = null
     var documentCount: TextView? = null
     var employeeIdValue: String? = null
     var storeIdValue: String? = null
@@ -55,115 +55,39 @@ class MainActivity : AppCompatActivity() {
         employeePhone = findViewById(R.id.employeePhone)
         employeeZipCode = findViewById(R.id.employeeZipCode)
 
-        populateEmployeeInfo(storeIdValue!!, employeeIdValue!!)
+        populateEmployeeInfo(employeeIdValue!!)
         startCountUpdateThread(documentCount)
-    }
-
-    fun onDisplayTapped(view: View?) {
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-
-        val store = storeNumber!!.text
-        val employee = employeeID!!.text
-        val arrayAdapter: ArrayAdapter<*>
-        val results: MutableList<String> = ArrayList()
-
-        if (store!!.isEmpty() || employee!!.isEmpty()) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("Missing Values")
-            builder.setMessage("Please provide the store ID and employee ID")
-            builder.setPositiveButton("Ok") { dialog, which ->
-                Toast.makeText(
-                    applicationContext,
-                    "Ok", Toast.LENGTH_SHORT
-                ).show()
-            }
-            builder.show()
-        } else {
-            val time_now = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
-            val rs = db.employeeLookup(store.toString(), employee.toString())
-            for (result in rs) {
-                val builder = StringBuilder()
-                val documentId = result.getString("id")
-                val timeCardArray = result.getArray("timecards")
-                val mutableTimeCardArray: MutableArray? = timeCardArray?.toMutable()
-
-                Log.i(TAG, "ID -> ${result.getString("id")}")
-                Log.i(TAG, "name -> ${result.getString("name")}")
-                Log.i(TAG, "employee_id -> ${result.getString("employee_id")}")
-
-                builder.append(result.getString("name").toString())
-                builder.append("\n")
-                builder.append("Employee ID: ${result.getString("employee_id")}")
-                results.add(builder.toString())
-
-                val mutableDoc = db.getDocument(documentId.toString())
-                    .setString("last_access", time_now.toString())
-                mutableTimeCardArray?.addString(time_now.toString())
-                mutableDoc.setArray("timecards", mutableTimeCardArray)
-                db.updateDocument(mutableDoc)
-            }
-
-            if (results.isEmpty()) {
-                val builder = AlertDialog.Builder(this)
-                builder.setTitle("Not Found")
-                builder.setMessage("The employee was not found")
-                builder.setPositiveButton("Ok") { dialog, which ->
-                    Toast.makeText(
-                        applicationContext,
-                        "Ok", Toast.LENGTH_SHORT
-                    ).show()
-                }
-                builder.show()
-            } else {
-                arrayAdapter = ArrayAdapter(
-                    this,
-                    android.R.layout.simple_list_item_1, results
-                )
-                textView!!.adapter = arrayAdapter
-            }
-        }
+        Log.i(TAG, "Started Main Activity")
     }
 
     fun onDumpTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val rs = db.getAllEmployees()
-        val results = rs.allResults()
+        val scope = CoroutineScope(Dispatchers.Default)
+        var employees: ArrayList<Employee>
 
-        for (result in results) {
-            val docsProps = result.getDictionary(0)
-            val dumpRow = TableRow(this)
-            val dumpRowLabel = TextView(this)
-            val dumpRowElement = TextView(this)
-            val scale = resources.displayMetrics.density
-            val dpAsPixels = (10 * scale)
+        scope.launch {
+            employees = db.queryEmployees()
+            withContext(Dispatchers.Main) {
+                val adapter = EmployeeAdapter(cntx, employees)
+                dumpView!!.adapter = adapter
 
-            val builder = StringBuilder()
-            builder.append(docsProps!!.getString("employee_id").toString())
-            builder.append(")")
-            dumpRowLabel.setTextColor(Color.BLACK)
-            dumpRowLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-            dumpRowLabel.text = builder.toString()
-            dumpRow.addView(dumpRowLabel)
-            dumpRowElement.setTextColor(Color.BLACK)
-            dumpRowElement.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16F)
-            dumpRowElement.setPadding(dpAsPixels.toInt(), 0, 0, 0);
-            dumpRowElement.text = docsProps.getString("name").toString()
-            dumpRow.addView(dumpRowElement)
+                dumpView!!.setOnItemClickListener { _, _, position, _ ->
+                    populateEmployeeInfo(employees[position].employeeId)
+                }
 
-            dumpView!!.addView(dumpRow)
-        }
-
-        if (results.isEmpty()) {
-            val builder = AlertDialog.Builder(this)
-            builder.setTitle("No Data")
-            builder.setMessage("The database is empty")
-            builder.setPositiveButton("Ok") { dialog, which ->
-                Toast.makeText(
-                    applicationContext,
-                    "Ok", Toast.LENGTH_SHORT
-                ).show()
+                if (employees.isEmpty()) {
+                    val builder = AlertDialog.Builder(cntx)
+                    builder.setTitle("No Data")
+                    builder.setMessage("The database is empty")
+                    builder.setPositiveButton("Ok") { dialog, which ->
+                        Toast.makeText(
+                            applicationContext,
+                            "Ok", Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    builder.show()
+                }
             }
-            builder.show()
         }
     }
 
@@ -188,26 +112,29 @@ class MainActivity : AppCompatActivity() {
         Thread(runnable).start()
     }
 
-    private fun populateEmployeeInfo(store: String, employee: String) {
+    private fun populateEmployeeInfo(employeeId: String) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val rs = db.employeeLookup(store, employee)
-        val results = rs.allResults()
-        val docsProps = results.first().getDictionary(0)
+        val scope = CoroutineScope(Dispatchers.Default)
         val timeNow = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 
-        employeeName?.text = docsProps?.getString("name").toString()
-        employeeAddress?.text = docsProps?.getString("address").toString()
-        employeeEmail?.text = docsProps?.getString("email").toString()
-        employeePhone?.text = docsProps?.getString("phone").toString()
-        employeeZipCode?.text = docsProps?.getString("zip_code").toString()
+        scope.launch {
+        val employee = db.getEmployeeById("employees:${employeeId}")
+            withContext(Dispatchers.Main) {
+                employeeName?.text = employee.name
+                employeeAddress?.text = employee.address
+                employeeEmail?.text = employee.email
+                employeePhone?.text = employee.phone
+                employeeZipCode?.text = employee.zipCode
 
-        val documentId = db.getDocId(employee)
-        val mutableTimeCardArray: MutableArray? = docsProps?.getArray("timecards")?.toMutable()
-        val mutableDoc = db.getDocument(documentId.toString())
-            .setString("last_access", timeNow.toString())
-        mutableTimeCardArray?.addString(timeNow.toString())
-        mutableDoc.setArray("timecards", mutableTimeCardArray)
-        db.updateDocument(mutableDoc)
+                val timeCards = ArrayList<String>(employee.timeCards)
+                val mutableDoc = db.getDocument("employees:${employeeId}")
+                    .setString("last_access", timeNow.toString())
+                timeCards.add(timeNow.toString())
+                val timeCardsUpdate = MutableArray(timeCards.toMutableList() as List<Any>)
+                mutableDoc.setArray("timecards", timeCardsUpdate)
+                db.updateDocument(mutableDoc)
+            }
+        }
     }
 
     fun onLogoutTapped(view: View?) {

@@ -10,6 +10,8 @@ import com.example.sgwdemo.models.Claim
 import com.google.gson.Gson
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.example.sgwdemo.models.Employee
+import com.example.sgwdemo.models.EmployeeDao
 import kotlinx.coroutines.*
 import java.net.URI
 
@@ -288,6 +290,29 @@ class CouchbaseConnect(context: Context) {
         }
     }
 
+    suspend fun queryEmployees(): ArrayList<Employee> {
+        return withContext(Dispatchers.IO) {
+            Log.i(TAG, "Begin Employee Query")
+            val employees = arrayListOf<Employee>()
+            try {
+                val query = QueryBuilder
+                    .select(
+                        SelectResult.all()
+                    )
+                    .from(DataSource.database(db!!).`as`("employees"))
+                    .orderBy(Ordering.expression(Expression.property("employee_id").from("employees")))
+                query.execute().allResults().forEach { item ->
+                    val json = item.toJSON()
+                    val employee = gson.fromJson(json, EmployeeDao::class.java).item
+                    employees.add(employee)
+                }
+            } catch (e: Exception){
+                Log.e(e.message, e.stackTraceToString())
+            }
+            return@withContext employees
+        }
+    }
+
     fun getDocument(documentId: String): MutableDocument {
         return db!!.getDocument(documentId)!!.toMutable()
     }
@@ -309,6 +334,26 @@ class CouchbaseConnect(context: Context) {
                 Log.e(e.message, e.stackTraceToString())
             }
             return@withContext claim
+        }
+    }
+
+    suspend fun getEmployeeById(documentId: String): Employee {
+        var employee = Employee()
+        return withContext(Dispatchers.IO) {
+            try {
+                db?.let { database ->
+                    val doc = database.getDocument(documentId)
+                    doc?.let { document ->
+                        val json = document.toJSON()
+                        json?.let {
+                            employee = gson.fromJson(json, Employee::class.java)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(e.message, e.stackTraceToString())
+            }
+            return@withContext employee
         }
     }
 
