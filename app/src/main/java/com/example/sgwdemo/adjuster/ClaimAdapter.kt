@@ -46,7 +46,7 @@ class ClaimAdapter(context: Context, private val arrayList: ArrayList<ClaimGrid>
         claimId.text = claim.claimId
         customer.text = claim.customerName
         phone.text = claim.customerPhone
-        amount.text = claim.claimAmount.toString()
+        amount.text = String.format("$ %.2f", claim.claimAmount)
         status.text = convertStatusId(claim.claimStatus)
 
         return rowView

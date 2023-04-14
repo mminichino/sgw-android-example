@@ -76,12 +76,13 @@ class LoginActivity : AppCompatActivity() {
 
     fun onLoginTapped(view: View?) {
         val cntx: Context = getApplicationContext()
-        val username = usernameInput!!.text.toString()
+        var username = usernameInput!!.text.toString()
         val password = passwordInput!!.text.toString()
         val pref: SharedPreferences =
             applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
         val activeDemo = pref.getString(R.string.activeDemoKey.toString(), "")
         val groupTagField = pref.getString(R.string.groupTagFieldKey.toString(), "")
+        username = username.replace(" ", "")
 
         if (usernameInput!!.length() == 0 || passwordInput!!.length() == 0) {
             showMessageDialog("Missing Information",

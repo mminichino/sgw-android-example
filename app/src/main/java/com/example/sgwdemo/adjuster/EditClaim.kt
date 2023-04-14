@@ -1,5 +1,6 @@
 package com.example.sgwdemo.adjuster
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -14,6 +15,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 
 class EditClaimActivity : AppCompatActivity() {
@@ -94,8 +97,19 @@ class EditClaimActivity : AppCompatActivity() {
     fun onSaveTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         documentId = "claim::${claimId}"
-        val claimAmount = claimAmountInput!!.text.toString().toFloat()
+        val claimAmountString = claimAmountInput!!.text
 
+        val regex = "^(\\d+)(\\.\\d{2})?$"
+        val p: Pattern = Pattern.compile(regex)
+        val m: Matcher = p.matcher(claimAmountString)
+
+        if (!m.matches()) {
+            showMessageDialog("Invalid Amount",
+                "Please provide a valid dollar amount")
+            return
+        }
+
+        val claimAmount = claimAmountString.toString().toFloat()
         val mutableDoc = db.getDocument(documentId.toString())
             .setFloat("claim_amount", claimAmount)
             .setInt("claim_status", claimStatus)
@@ -104,5 +118,18 @@ class EditClaimActivity : AppCompatActivity() {
         val intent = Intent(cntx, AdjusterMainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         startActivity(intent)
+    }
+
+    private fun showMessageDialog(title: String, message: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(title)
+        builder.setMessage(message)
+        builder.setPositiveButton("Ok") { dialog, which ->
+            Toast.makeText(
+                applicationContext,
+                "Ok", Toast.LENGTH_SHORT
+            ).show()
+        }
+        builder.show()
     }
 }

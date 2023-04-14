@@ -63,6 +63,7 @@
                         android:id="@+id/claimAmount"
                         android:layout_width="200dp"
                         android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"
                         android:textColor="@color/black"
                         android:textSize="18sp"
                         android:padding="5dp" />

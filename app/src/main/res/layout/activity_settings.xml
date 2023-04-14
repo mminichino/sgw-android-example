@@ -19,77 +19,121 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
-            android:layout_width="300dp"
+            android:layout_width="400dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:orientation="vertical"
             android:layout_marginTop="25dp"
             android:layout_marginBottom="25dp">
-            <TextView
+            <TableLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/gatewayLabel"
-                android:textSize="18sp"
-                android:textColor="@color/black" />
-            <EditText
-                android:id="@+id/gatewayAddress"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/gatewayAddress" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/authServiceLabel"
-                android:textSize="18sp"
-                android:textColor="@color/black" />
-            <EditText
-                android:id="@+id/serviceAddress"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/serviceAddress" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/authPortLabel"
-                android:textSize="18sp"
-                android:textColor="@color/black" />
-            <EditText
-                android:id="@+id/servicePort"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/servicePortHint" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="5dp"
-                android:text="@string/databaseNameLabel"
-                android:textSize="18sp"
-                android:textColor="@color/black" />
-            <EditText
-                android:id="@+id/databaseName"
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:backgroundTint="@color/colorPrimary"
-                android:hint="@string/databaseName" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:text="@string/demoLabel"
-                android:textSize="18sp"
-                android:textColor="@color/black" />
-            <Spinner
-                android:id="@+id/demoSelect"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:prompt="@string/demoListTitle"
-                />
+                android:layout_gravity="center">
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/gatewayLabel"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <EditText
+                        android:id="@+id/gatewayAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:backgroundTint="@color/colorPrimary"
+                        android:hint="@string/gatewayAddress" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/authServiceLabel"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <EditText
+                        android:id="@+id/serviceAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:backgroundTint="@color/colorPrimary"
+                        android:hint="@string/serviceAddress" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/authPortLabel"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <EditText
+                        android:id="@+id/servicePort"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:backgroundTint="@color/colorPrimary"
+                        android:hint="@string/servicePortHint" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/databaseNameLabel"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <EditText
+                        android:id="@+id/databaseName"
+                        android:layout_width="match_parent"
+                        android:layout_height="54dp"
+                        android:backgroundTint="@color/colorPrimary"
+                        android:hint="@string/databaseName" />
+                </TableRow>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="5dp"
+                        android:text="@string/demoLabel"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <Spinner
+                        android:id="@+id/demoSelect"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:prompt="@string/demoListTitle"/>
+                </TableRow>
+            </TableLayout>
         </LinearLayout>
 
         <Button

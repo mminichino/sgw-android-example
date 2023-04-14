@@ -33,9 +33,9 @@
     <string name="zipCode">Zip:</string>
     <string name="databaseName">Database Name</string>
     <string name="clearButton">Clear App Data</string>
-    <string name="gatewayLabel">Sync Gateway IP:</string>
-    <string name="authServiceLabel">Auth Service IP:</string>
-    <string name="databaseNameLabel">Database Name:</string>
+    <string name="gatewayLabel">Gateway IP:</string>
+    <string name="authServiceLabel">Service IP:</string>
+    <string name="databaseNameLabel">Database:</string>
     <string name="demoLabel">Demo:</string>
     <string name="demoListTitle" />
     <string name="claimsList">Open Claims:</string>
@@ -47,8 +47,8 @@
     <string name="rowClaimId">Claim ID:</string>
     <string name="rowCustomer">Customer:</string>
     <string name="rowPhone">Phone:</string>
-    <string name="rowAmount">Amount:</string>
+    <string name="rowAmount">Amount</string>
     <string name="rowStatus">Status:</string>
-    <string name="authPortLabel">Auth Service Port:</string>
+    <string name="authPortLabel">Service Port:</string>
     <string name="servicePortHint">Auth Service Port</string>
 </resources>
