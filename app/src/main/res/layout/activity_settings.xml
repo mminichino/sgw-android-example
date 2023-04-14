@@ -55,6 +55,19 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="5dp"
+                android:text="@string/authPortLabel"
+                android:textSize="18sp"
+                android:textColor="@color/black" />
+            <EditText
+                android:id="@+id/servicePort"
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:backgroundTint="@color/colorPrimary"
+                android:hint="@string/servicePortHint" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
                 android:text="@string/databaseNameLabel"
                 android:textSize="18sp"
                 android:textColor="@color/black" />

@@ -22,9 +22,11 @@ class PreferenceActivity : AppCompatActivity() {
     private val TAG = "PreferenceActivity"
     var demoList: List<String>? = null
     var tagList: List<String>? = null
+    var portList: List<String>? = null
     var pref: SharedPreferences? = null
     var serviceAddressInput: EditText? = null
     var gatewayAddressInput: EditText? = null
+    var servicePortInput: EditText? = null
     var databaseNameInput: EditText? = null
     var activeDemoInput: String? = null
     var groupTagFieldInput: String? = null
@@ -36,12 +38,17 @@ class PreferenceActivity : AppCompatActivity() {
         pref = applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
         val demoListString = pref!!.getString(R.string.demoListKey.toString(), "")
         val tagListString = pref!!.getString(R.string.tagListKey.toString(), "")
+        val portListString = pref!!.getString(R.string.servicePortList.toString(), "")
         serviceAddressInput = findViewById(R.id.serviceAddress)
         gatewayAddressInput = findViewById(R.id.gatewayAddress)
+        servicePortInput = findViewById(R.id.servicePort)
         databaseNameInput = findViewById(R.id.databaseName)
         serviceAddressInput!!.setText(
             pref!!.getString(
                 R.string.servicePropertyKey.toString(), ""))
+        servicePortInput!!.setText(
+            pref!!.getString(
+                R.string.servicePort.toString(), ""))
         gatewayAddressInput!!.setText(
             pref!!.getString(
                 R.string.gatewayPropertyKey.toString(), ""))
@@ -50,8 +57,10 @@ class PreferenceActivity : AppCompatActivity() {
                 R.string.databaseNameKey.toString(), ""))
         demoList = demoListString!!.split(",").map { it.trim() }
         tagList = tagListString!!.split(",").map { it.trim() }
+        portList = portListString!!.split(",").map { it.trim() }
         val spinnerChoice = pref!!.getInt(R.string.demoListChoice.toString(), 0)
         Log.i(TAG, "Auth IP    : ${serviceAddressInput!!.text}")
+        Log.i(TAG, "Auth Port  : ${servicePortInput!!.text}")
         Log.i(TAG, "Gateway IP : ${gatewayAddressInput!!.text}")
         Log.i(TAG, "Database   : ${databaseNameInput!!.text}")
         Log.i(TAG, "Choice     : $spinnerChoice")
@@ -73,6 +82,7 @@ class PreferenceActivity : AppCompatActivity() {
                     Log.i(TAG, "Tag List : $tagListString")
                     activeDemoInput = demoList!![position]
                     groupTagFieldInput = tagList!![position]
+                    servicePortInput!!.setText(portList!![position])
                     databaseNameInput!!.setText(activeDemoInput!!.toString())
                     pref!!.edit().putInt(R.string.demoListChoice.toString(), position).apply()
                 }
@@ -89,6 +99,9 @@ class PreferenceActivity : AppCompatActivity() {
         pref!!.edit()
             .putString(R.string.servicePropertyKey.toString(),
                 serviceAddressInput!!.text.toString()).apply()
+        pref!!.edit()
+            .putString(R.string.servicePort.toString(),
+                servicePortInput!!.text.toString()).apply()
         pref!!.edit()
             .putString(R.string.gatewayPropertyKey.toString(),
                 gatewayAddressInput!!.text.toString()).apply()

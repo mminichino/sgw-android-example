@@ -28,6 +28,8 @@
     <string name="activeDemoKey">active_demo</string>
     <string name="groupTagFieldKey">group_tag_field</string>
     <string name="demoListChoice">demo_list_choice</string>
+    <string name="servicePortList">service_port_list</string>
+    <string name="servicePort">service_port</string>
     <string name="zipCode">Zip:</string>
     <string name="databaseName">Database Name</string>
     <string name="clearButton">Clear App Data</string>
@@ -47,4 +49,6 @@
     <string name="rowPhone">Phone:</string>
     <string name="rowAmount">Amount:</string>
     <string name="rowStatus">Status:</string>
+    <string name="authPortLabel">Auth Service Port:</string>
+    <string name="servicePortHint">Auth Service Port</string>
 </resources>

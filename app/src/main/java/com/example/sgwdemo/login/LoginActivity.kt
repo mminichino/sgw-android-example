@@ -109,7 +109,8 @@ class LoginActivity : AppCompatActivity() {
         val client = builder.build()
 
         val serviceAddress = pref.getString(R.string.servicePropertyKey.toString(), "")
-        authUrl = "http://$serviceAddress:8080"
+        val servicePort = pref.getString(R.string.servicePort.toString(), "")
+        authUrl = "http://$serviceAddress:$servicePort"
         Log.d(TAG, "Auth URL: $authUrl")
 
         val service = Retrofit.Builder()

@@ -13,6 +13,8 @@ object AppPreferences {
         val tagList = Util.getProperty("tagList", context)
         val activeDemo = Util.getProperty("activeDemo", context)
         val groupTagField = Util.getProperty("groupTagField", context)
+        val servicePortList = Util.getProperty("servicePortList", context)
+        val servicePort = Util.getProperty("servicePort", context)
         val pref: SharedPreferences =
             context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
 
@@ -46,6 +48,14 @@ object AppPreferences {
 
         if (!pref.contains(R.string.demoListChoice.toString())) {
             pref.edit().putInt(R.string.demoListChoice.toString(), 0).apply()
+        }
+
+        if (!pref.contains(R.string.servicePortList.toString())) {
+            pref.edit().putString(R.string.servicePortList.toString(), servicePortList).apply()
+        }
+
+        if (!pref.contains(R.string.servicePort.toString())) {
+            pref.edit().putString(R.string.servicePort.toString(), servicePort).apply()
         }
     }
 }
