@@ -1,4 +1,4 @@
-# Couchbase Android Sync Gateway Demo 3.1
+# Couchbase Android Sync Gateway Demo 3.2
 
 Clone into Android Studio.
 
@@ -12,25 +12,15 @@ The password for all users is "password". To reset and start from scratch, use t
 ![Access](doc/access-4.jpg)
 ![Login](doc/login-1.jpg)
 
-## Employee Backend Container
+## Backend Container
 
-To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the employee demo use the [empdemo](https://hub.docker.com/r/mminichino/empdemo) container.
-You can obtain a [helper utility](https://github.com/mminichino/employee-demo-container/releases/download/2.1.3/rundemo.sh) to run and manage the container.
+To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the demo use the [mobiledemo](https://hub.docker.com/r/mminichino/mobiledemo) container.
+You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/1.0.0/rundemo.sh) to run and manage the container.
 Run the following to download the utility:
 ```
-curl -L -O https://github.com/mminichino/employee-demo-container/releases/download/2.1.3/rundemo.sh
+curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/1.0.0/rundemo.sh
 ```
-To build the container yourself, you can access the source here: [employee-demo-container](https://github.com/mminichino/employee-demo-container).
-
-## Adjuster Backend Container
-
-To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the adjuster demo use the [adjdemo](https://hub.docker.com/r/mminichino/adjdemo) container.
-You can obtain a [helper utility](https://github.com/mminichino/adjuster-demo-container/releases/download/1.0.1/rundemo.sh) to run and manage the container.
-Run the following to download the utility:
-```
-curl -L -O https://github.com/mminichino/adjuster-demo-container/releases/download/1.0.1/rundemo.sh
-```
-To build the container yourself, you can access the source here: [adjuster-demo-container](https://github.com/mminichino/adjuster-demo-container).
+To build the container yourself, you can access the source here: [mobile-demo-container](https://github.com/mminichino/mobile-demo-container).
 
 ### Notes
 If you run the container on the same system running Android Studio (such as your desktop) use the system's IP address, not localhost (127.0.0.1).
