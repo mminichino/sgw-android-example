@@ -1,4 +1,4 @@
-# Couchbase Android Sync Gateway Demo 3.0
+# Couchbase Android Sync Gateway Demo 3.1
 
 Clone into Android Studio.
 
