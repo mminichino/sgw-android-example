@@ -15,10 +15,8 @@ import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
 import com.example.sgwdemo.models.Employee
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import java.lang.Runnable
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
@@ -118,7 +116,7 @@ class MainActivity : AppCompatActivity() {
         val timeNow = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 
         scope.launch {
-        val employee = db.getEmployeeById("employees:${employeeId}")
+            val employee = db.getEmployeeById("employees:${employeeId}")
             withContext(Dispatchers.Main) {
                 employeeName?.text = employee.name
                 employeeAddress?.text = employee.address

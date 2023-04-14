@@ -142,8 +142,7 @@ class LoginActivity : AppCompatActivity() {
                     progress!!.visibility = View.INVISIBLE
 
                     setupDb(
-                        groupTagField!!, groupTag,
-                        response.body()!!.cookie_name, response.body()!!.session_id
+                        username, response.body()!!.cookie_name, response.body()!!.session_id
                     )
 
                     if (activeDemo == "employees") {
@@ -192,19 +191,13 @@ class LoginActivity : AppCompatActivity() {
         builder.show()
     }
 
-    fun setupDb(field: String, value: String, sessionCookie: String, sessionId: String) {
+    fun setupDb(username: String, sessionCookie: String, sessionId: String) {
+        val pref = applicationContext.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
+        val gatewayAddress = pref.getString(R.string.gatewayPropertyKey.toString(), "")
+        val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
 
-        if (!db.isDbOpen()) {
-            val userStringBuilder = StringBuilder()
-            userStringBuilder.append("$field@")
-            userStringBuilder.append(value)
-            val dbUser = userStringBuilder.toString()
-
-            db.init()
-            db.openDatabase(dbUser)
-            db.syncDatabase(sessionId, sessionCookie)
-        }
+        db.openDatabase(databaseName!!, gatewayAddress!!, username, sessionId, sessionCookie)
     }
 }
 

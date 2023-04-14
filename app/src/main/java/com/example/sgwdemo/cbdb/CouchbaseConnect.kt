@@ -1,10 +1,8 @@
 package com.example.sgwdemo.cbdb
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import com.couchbase.lite.*
-import com.example.sgwdemo.R
 import com.example.sgwdemo.models.ClaimGrid
 import com.example.sgwdemo.models.Claim
 import com.google.gson.Gson
@@ -13,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
 import kotlinx.coroutines.*
+import kotlin.math.pow
 import java.net.URI
 
 
@@ -40,60 +39,112 @@ open class CouchbaseConnectHolder<out T: Any, in A>(creator: (A) -> T) {
     }
 }
 
+class DocNotFoundException(message: String) : Exception(message)
 
 class CouchbaseConnect(context: Context) {
 
     private var TAG = "CouchbaseConnect"
     private var cntx: Context = context
-    val gson = Gson()
+
+    var employeesDatabase: Database? = null
+    var adjusterDatabase: Database? = null
+
+    var employeesDatabaseOpen: Boolean = false
+    var adjusterDatabaseOpen: Boolean = false
+
+    private val employeeIndexes = listOf(
+        "store_id",
+        "employee_id",
+        "user_id")
+    private val adjusterIndexes = listOf(
+        "claim_id",
+        "customer_id",
+        "adjuster_id",
+        "region",
+        "type",
+        "claim_status",
+        "claim_amount")
+
+    private val gson = Gson()
     var db: Database? = null
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
-    var connectString: String? = null
-    var dbOpen: Boolean = false
-    val replicationStatus: MutableState<String> = mutableStateOf("")
-    val replicationProgress: MutableState<String> = mutableStateOf("Not Started")
-    val pref: SharedPreferences =
-        context.getSharedPreferences("APP_SETTINGS", Context.MODE_PRIVATE)
+    private val replicationStatus: MutableState<String> = mutableStateOf("")
+    private val replicationProgress: MutableState<String> = mutableStateOf("Not Started")
+    private val retryCount: Int = 10
 
     companion object : CouchbaseConnectHolder<CouchbaseConnect, Context>(::CouchbaseConnect)
 
-    fun init() {
-        val gatewayAddress = pref.getString(R.string.gatewayPropertyKey.toString(), "")
-        val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
-
-        connectString = "ws://$gatewayAddress:4984/$databaseName"
-        Log.i(TAG, "DB init -> $connectString")
+    init {
         replicationStatus.value = ReplicationStatus.UNINITIALIZED
-
         CouchbaseLite.init(cntx)
     }
 
-    fun openDatabase(username: String) {
-        val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
-        Log.i(TAG, "DB open -> $username")
-        val cfg = DatabaseConfigurationFactory.create()
-        cfg.setDirectory(String.format("%s/%s", cntx.getFilesDir(), username))
+    fun openDatabase(database: String, gateway: String, username: String, session: String, cookie: String) {
+        val filteredName = (username.filterNot { it.isWhitespace() }).lowercase()
+        val databaseFileName = filteredName.plus("_").plus(database)
+        Log.i(TAG, "Database Open -> user $username db $database")
+
+        val cfg = DatabaseConfigurationFactory.create(cntx.filesDir.toString())
+
         try {
-            db = Database(databaseName!!, cfg)
-            db!!.createIndex(
-                "DemoIndex",
-                IndexBuilder.valueIndex(
-                    ValueIndexItem.property("store_id"),
-                    ValueIndexItem.property("employee_id"),
-                    ValueIndexItem.property("type"),
-                    ValueIndexItem.property("region"),
-                    ValueIndexItem.property("claim_id"),
-                    ValueIndexItem.property("customer_id")
-                )
-            )
+            when (database) {
+                DatabaseType.EMPLOYEE -> {
+                    employeesDatabase = Database(databaseFileName, cfg)
+                    createIndexes(DatabaseType.EMPLOYEE)
+                    db = employeesDatabase
+                    employeesDatabaseOpen = true
+                }
+                DatabaseType.ADJUSTER -> {
+                    adjusterDatabase = Database(databaseFileName, cfg)
+                    createIndexes(DatabaseType.ADJUSTER)
+                    db = adjusterDatabase
+                    adjusterDatabaseOpen = true
+                }
+            }
+            syncDatabase(database, gateway, session, cookie)
         } catch (e: CouchbaseLiteException) {
             e.printStackTrace()
         }
     }
 
-    fun syncDatabase(session: String, cookie: String) {
-        Log.i(TAG, "DB Session Cookie -> $cookie")
+    private fun createIndexes(databaseType: String) {
+        var database: Database? = null
+        var indexes: Iterator<String> = iterator {  }
+        try {
+            when (databaseType) {
+                DatabaseType.EMPLOYEE -> {
+                    database = employeesDatabase
+                    indexes = employeeIndexes.listIterator()
+                }
+                DatabaseType.ADJUSTER -> {
+                    database = adjusterDatabase
+                    indexes = adjusterIndexes.listIterator()
+                }
+            }
+            database?.let {
+                while (indexes.hasNext()) {
+                    val indexField = indexes.next()
+                    val indexName = "idx_${indexField}"
+                    Log.i(TAG, "Processing Index $indexName")
+                    if (!it.indexes.contains(indexName)) {
+                        it.createIndex(
+                            indexName, IndexBuilder.valueIndex(
+                                ValueIndexItem.property(indexField)
+                            )
+                        )
+                    }
+                }
+            }
+        } catch (err: Exception){
+            Log.e(err.message, err.stackTraceToString())
+        }
+    }
+
+    private fun syncDatabase(database: String, gateway: String, session: String, cookie: String) {
+        val connectString = "ws://$gateway:4984/$database"
+        Log.i(TAG, "Sync init -> $connectString")
+        Log.i(TAG, "Sync Session Cookie -> $cookie")
 
         replicator = Replicator(
             ReplicatorConfigurationFactory.create(
@@ -145,12 +196,21 @@ class CouchbaseConnect(context: Context) {
         }
 
         replicator!!.start()
-        dbOpen = true
         replicationWait()
     }
 
-    fun isDbOpen(): Boolean {
-        return dbOpen
+    fun isDbOpen(database: String): Boolean {
+        return when (database) {
+            DatabaseType.EMPLOYEE -> {
+                employeesDatabaseOpen
+            }
+            DatabaseType.ADJUSTER -> {
+                adjusterDatabaseOpen
+            }
+            else -> {
+                false
+            }
+        }
     }
 
     fun employeeLookup(store: String, employee: String): ResultSet {
@@ -250,44 +310,41 @@ class CouchbaseConnect(context: Context) {
     }
 
     suspend fun queryClaims(): ArrayList<ClaimGrid> {
-        return withContext(Dispatchers.IO) {
-            Log.i(TAG, "Begin Claim Query")
-            val claims = arrayListOf<ClaimGrid>()
-            try {
-                val query = QueryBuilder
-                    .select(
-                        SelectResult.expression(Expression.property("claim_id").from("claim")),
-                        SelectResult.expression(Expression.property("name").from("customer")),
-                        SelectResult.expression(Expression.property("phone").from("customer")),
-                        SelectResult.expression(Expression.property("claim_amount").from("claim")),
-                        SelectResult.expression(Expression.property("claim_status").from("claim")),
-                    )
-                    .from(DataSource.database(db!!).`as`("claim"))
-                    .join(
-                        Join.join(DataSource.database(db!!).`as`("customer"))
-                            .on(
-                                Expression.property("customer_id").from("claim")
-                                    .equalTo(Expression.property("customer_id").from("customer"))
-                            )
-                    )
-                    .where(
-                        Expression.property("type").from("claim").equalTo(Expression.string("claim"))
-                            .and(
-                                Expression.property("type").from("customer").equalTo(Expression.string("customer"))
-                            )
-                    )
-                    .orderBy(Ordering.expression(Expression.property("claim_id").from("claim")))
-                query.execute().allResults().forEach { item ->
-                    val gson = Gson()
-                    val json = item.toJSON()
-                    val claim = gson.fromJson(json, ClaimGrid::class.java)
-                    claims.add(claim)
-                }
-            } catch (e: Exception){
-                Log.e(e.message, e.stackTraceToString())
+        val claims = arrayListOf<ClaimGrid>()
+        Log.i(TAG, "Begin Claim Query")
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.expression(Expression.property("claim_id").from("claim")),
+                    SelectResult.expression(Expression.property("name").from("customer")),
+                    SelectResult.expression(Expression.property("phone").from("customer")),
+                    SelectResult.expression(Expression.property("claim_amount").from("claim")),
+                    SelectResult.expression(Expression.property("claim_status").from("claim")),
+                )
+                .from(DataSource.database(db!!).`as`("claim"))
+                .join(
+                    Join.join(DataSource.database(db!!).`as`("customer"))
+                        .on(
+                            Expression.property("customer_id").from("claim")
+                                .equalTo(Expression.property("customer_id").from("customer"))
+                        )
+                )
+                .where(
+                    Expression.property("type").from("claim").equalTo(Expression.string("claim"))
+                        .and(
+                            Expression.property("type").from("customer").equalTo(Expression.string("customer"))
+                        )
+                )
+                .orderBy(Ordering.expression(Expression.property("claim_id").from("claim")))
+            query.execute().allResults().forEach { item ->
+                val gson = Gson()
+                val json = item.toJSON()
+                val claim = gson.fromJson(json, ClaimGrid::class.java)
+                claims.add(claim)
             }
-            return@withContext claims
+           if (claims.size == 0) throw DocNotFoundException("No claim records found")
         }
+        return claims
     }
 
     suspend fun queryEmployees(): ArrayList<Employee> {
@@ -317,44 +374,68 @@ class CouchbaseConnect(context: Context) {
         return db!!.getDocument(documentId)!!.toMutable()
     }
 
-    suspend fun getClaimById(documentId: String): Claim {
-        var claim = Claim()
+    suspend fun getMutableDocById(documentId: String): MutableDocument {
+        var mutableDoc = MutableDocument()
         return withContext(Dispatchers.IO) {
             try {
                 db?.let { database ->
                     val doc = database.getDocument(documentId)
                     doc?.let { document ->
-                        val json = document.toJSON()
-                        json?.let {
-                            claim = gson.fromJson(json, Claim::class.java)
-                        }
+                        mutableDoc = document.toMutable()
                     }
                 }
             } catch (e: Exception) {
                 Log.e(e.message, e.stackTraceToString())
             }
-            return@withContext claim
+            return@withContext mutableDoc
         }
+    }
+
+    private suspend fun <T> retryBlock(retryCount: Int = 10, waitFactor: Long = 100, block: suspend () -> T): T {
+        for (retry_number in 1..retryCount) {
+            try {
+                return block()
+            } catch (e: DocNotFoundException) {
+                Log.w(TAG, "Retry due to ${e.message}")
+                val wait = waitFactor * 2.toDouble().pow(retry_number.toDouble()).toLong()
+                delay(wait)
+            }
+        }
+        return block()
+    }
+
+    suspend fun getClaimById(documentId: String): Claim {
+        var claim = Claim()
+        retryBlock {
+            db?.let { database ->
+                val doc = database.getDocument(documentId)
+                doc?.let { document ->
+                    val json = document.toJSON()
+                    json?.let {
+                        claim = gson.fromJson(json, Claim::class.java)
+                    }
+                }
+            }
+            if (claim.recordId == 0) throw DocNotFoundException("Doc $documentId not found")
+        }
+        return claim
     }
 
     suspend fun getEmployeeById(documentId: String): Employee {
         var employee = Employee()
-        return withContext(Dispatchers.IO) {
-            try {
-                db?.let { database ->
-                    val doc = database.getDocument(documentId)
-                    doc?.let { document ->
-                        val json = document.toJSON()
-                        json?.let {
-                            employee = gson.fromJson(json, Employee::class.java)
-                        }
+        retryBlock {
+            db?.let { database ->
+                val doc = database.getDocument(documentId)
+                doc?.let { document ->
+                    val json = document.toJSON()
+                    json?.let {
+                        employee = gson.fromJson(json, Employee::class.java)
                     }
                 }
-            } catch (e: Exception) {
-                Log.e(e.message, e.stackTraceToString())
             }
-            return@withContext employee
+            if (employee.recordId == 0) throw DocNotFoundException("Doc $documentId not found")
         }
+        return employee
     }
 
     fun updateDocument(doc: MutableDocument) {
@@ -365,13 +446,23 @@ class CouchbaseConnect(context: Context) {
         return db!!.count.toString()
     }
 
-    private fun replicationWait() {
+    fun replicationWait() {
         val scope = CoroutineScope(Dispatchers.Default)
+        var retry = retryCount
         scope.launch {
-            while (replicationProgress.value != "Completed") {
+            while (replicationProgress.value != "Completed" && retry > 0) {
+                Log.i(TAG, "Waiting for replication to complete")
                 delay(100)
+                retry -= 1
             }
         }
+    }
+
+    suspend fun waitForDocuments(maxDelay: Long, checkPeriod: Long) : Boolean{
+        if(maxDelay < 0) return false
+        if(dbCount().toInt() > 0) return true
+        delay(checkPeriod)
+        return waitForDocuments(maxDelay - checkPeriod, checkPeriod)
     }
 
     fun closeDatabase() {
@@ -380,7 +471,6 @@ class CouchbaseConnect(context: Context) {
                 stopSync()
                 db!!.close()
                 db = null
-                dbOpen = false
             }
         } catch (e: CouchbaseLiteException) {
             e.printStackTrace()
@@ -401,4 +491,9 @@ object ReplicationStatus {
     const val BUSY = "Busy"
     const val CONNECTING = "Connecting"
     const val UNINITIALIZED = "Not Initialized"
+}
+
+object DatabaseType {
+    const val EMPLOYEE = "employees"
+    const val ADJUSTER = "adjuster"
 }
