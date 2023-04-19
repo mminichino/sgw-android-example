@@ -51,7 +51,7 @@ class EditClaimActivity : AppCompatActivity() {
                 claimPaidView = findViewById(R.id.claimPaid)
 
                 claimIdView!!.text = claim.claimId
-                claimAmountInput!!.setText(claim.claimAmount.toString())
+                claimAmountInput!!.setText(String.format("%.2f", claim.claimAmount))
 
                 val dateString = claim.claimDate
                 val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)

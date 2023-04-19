@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -48,13 +47,14 @@ class AdjusterMainActivity : AppCompatActivity() {
     private fun createClaimList() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         val scope = CoroutineScope(Dispatchers.Default)
+        val claimAdapter = ClaimAdapter()
         var claims: ArrayList<ClaimGrid>
 
         scope.launch {
             claims = db.queryClaims()
             withContext(Dispatchers.Main) {
-                val adapter = ClaimAdapter(cntx, claims)
-                listView!!.adapter = adapter
+                claimAdapter.claimListAdapter(cntx, claims)
+                listView!!.adapter = claimAdapter
 
                 listView!!.setOnItemClickListener { _, _, position, _ ->
                     val intent = Intent(cntx, EditClaimActivity::class.java)
@@ -68,14 +68,12 @@ class AdjusterMainActivity : AppCompatActivity() {
 
                 val refreshButton = findViewById<ImageButton>(R.id.refreshButton)
                 refreshButton.setOnClickListener {
-                    val intent = Intent(cntx, AdjusterMainActivity::class.java)
-                    intent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK
-                                or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    )
-                    intent.putExtra("Region", regionValue)
-                    intent.putExtra("UserName", userIdValue)
-                    startActivity(intent)
+                    scope.launch {
+                        claims = db.queryClaims()
+                        withContext(Dispatchers.Main) {
+                            claimAdapter.updateListAdapter(claims)
+                        }
+                    }
                 }
 
                 if (claims.isEmpty()) {
@@ -91,14 +89,6 @@ class AdjusterMainActivity : AppCompatActivity() {
                     builder.show()
                 }
             }
-        }
-    }
-
-    private fun convertStatusId(id: Int) : String {
-        return if (id == 0) {
-            "Open"
-        } else {
-            "Complete"
         }
     }
 
