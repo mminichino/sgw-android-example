@@ -66,6 +66,18 @@ class AdjusterMainActivity : AppCompatActivity() {
                     startActivity(intent)
                 }
 
+                val refreshButton = findViewById<ImageButton>(R.id.refreshButton)
+                refreshButton.setOnClickListener {
+                    val intent = Intent(cntx, AdjusterMainActivity::class.java)
+                    intent.addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK
+                                or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    )
+                    intent.putExtra("Region", regionValue)
+                    intent.putExtra("UserName", userIdValue)
+                    startActivity(intent)
+                }
+
                 if (claims.isEmpty()) {
                     val builder = AlertDialog.Builder(cntx)
                     builder.setTitle("No Data")
