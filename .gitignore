@@ -31,3 +31,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# ignore standard Mac OS X files/dirs
+.DS_Store
