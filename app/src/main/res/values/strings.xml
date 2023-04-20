@@ -38,7 +38,7 @@
     <string name="databaseNameLabel">Database:</string>
     <string name="demoLabel">Demo:</string>
     <string name="demoListTitle" />
-    <string name="claimsList">Open Claims:</string>
+    <string name="claimsList">Claims</string>
     <string name="claimIdLabel">Claim ID:</string>
     <string name="claimAmountLabel">Amount:</string>
     <string name="claimDateLabel">Date:</string>
@@ -52,4 +52,9 @@
     <string name="authPortLabel">Service Port:</string>
     <string name="servicePortHint">Auth Service Port</string>
     <string name="refreshButtonDescription">Refresh</string>
+    <string name="adjusterNameHeader">Adjuster:</string>
+    <string name="adjusterRegionHeader">Region:</string>
+    <string name="claimAdjusterLabel">Updated By:</string>
+    <string name="noneText">None</string>
+    <string name="cancelButton">Cancel</string>
 </resources>

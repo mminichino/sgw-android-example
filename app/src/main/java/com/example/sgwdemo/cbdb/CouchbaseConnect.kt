@@ -8,6 +8,9 @@ import com.example.sgwdemo.models.Claim
 import com.google.gson.Gson
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.couchbase.lite.Function
+import com.example.sgwdemo.models.Adjuster
+import com.example.sgwdemo.models.ClaimTotal
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
 import kotlinx.coroutines.*
@@ -436,6 +439,71 @@ class CouchbaseConnect(context: Context) {
             if (employee.recordId == 0) throw DocNotFoundException("Doc $documentId not found")
         }
         return employee
+    }
+
+    suspend fun getAdjusterByUserName(userName: String): Adjuster {
+        var adjuster = Adjuster()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.all()
+                )
+                .from(DataSource.database(db!!))
+                .where(
+                    Expression.property("type").equalTo(Expression.string("adjuster"))
+                        .and(
+                            Expression.property("user_id").equalTo(Expression.string(userName))
+                        )
+                )
+            query.execute().allResults().forEach { item ->
+                val json = item.getDictionary(0)?.toJSON()
+                adjuster = gson.fromJson(json, Adjuster::class.java)
+            }
+            if (adjuster.recordId == 0) throw DocNotFoundException("Adjuster $userName not found")
+        }
+        return adjuster
+    }
+
+    suspend fun getAdjusterById(adjusterId: String): Adjuster {
+        var adjuster = Adjuster()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.all()
+                )
+                .from(DataSource.database(db!!))
+                .where(
+                    Expression.property("type").equalTo(Expression.string("adjuster"))
+                        .and(
+                            Expression.property("employee_id").equalTo(Expression.string(adjusterId))
+                        )
+                )
+            query.execute().allResults().forEach { item ->
+                val json = item.getDictionary(0)?.toJSON()
+                adjuster = gson.fromJson(json, Adjuster::class.java)
+            }
+            if (adjuster.recordId == 0) throw DocNotFoundException("Adjuster $adjusterId not found")
+        }
+        return adjuster
+    }
+
+    suspend fun getClaimCounts(): ClaimTotal {
+        var total = ClaimTotal()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
+                )
+                .from(DataSource.database(db!!))
+                .where(
+                    Expression.property("type").equalTo(Expression.string("claim"))
+                )
+            query.execute().allResults().forEach { item ->
+                val json = item.toJSON()
+                total = gson.fromJson(json, ClaimTotal::class.java)
+            }
+        }
+        return total
     }
 
     fun updateDocument(doc: MutableDocument) {

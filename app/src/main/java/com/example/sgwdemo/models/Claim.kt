@@ -2,6 +2,14 @@ package com.example.sgwdemo.models
 
 import com.google.gson.annotations.SerializedName
 
+data class ClaimTotal(
+    @SerializedName("total") var total: Int
+    ) {
+    constructor() : this(
+        0
+    )
+}
+
 data class Claim (
     @SerializedName("adjuster_id") val adjusterId: Int,
     @SerializedName("claim_amount") val claimAmount: Float,

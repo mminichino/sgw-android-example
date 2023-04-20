@@ -6,16 +6,19 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.login.LoginActivity
+import com.example.sgwdemo.models.Adjuster
 import com.example.sgwdemo.models.ClaimGrid
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import kotlinx.coroutines.*
 import java.lang.Runnable
+import java.util.Locale
 
 
 class AdjusterMainActivity : AppCompatActivity() {
@@ -25,23 +28,39 @@ class AdjusterMainActivity : AppCompatActivity() {
     var logoutButton: Button? = null
     var listView: ListView? = null
     var documentCount: TextView? = null
+    var adjusterView: TextView? = null
+    var regionView: TextView? = null
     var userIdValue: String? = null
     var regionValue: String? = null
+    var adjuster = Adjuster()
     var progress: CircularProgressIndicator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_adjuster_main)
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        val scope = CoroutineScope(Dispatchers.Default)
 
         userIdValue = intent.getStringExtra("UserName")
         regionValue = intent.getStringExtra("Region")
         logoutButton = findViewById(R.id.logoutButton)
         listView = findViewById(R.id.listView)
-        documentCount = findViewById(R.id.documentCount)
+        documentCount = findViewById(R.id.openClaimCount)
         progress = findViewById(R.id.progressBarLoadWait)
+        adjusterView = findViewById(R.id.adjusterNameHeader)
+        regionView = findViewById(R.id.adjusterRegionHeader)
+
+        scope.launch {
+            adjuster = db.getAdjusterByUserName(userIdValue!!)
+            adjusterView?.text = String.format("Adjuster: %s %s", adjuster.firstName, adjuster.lastName)
+        }
+
+        regionView?.text = String.format("Region: %s",
+            regionValue?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
 
         createClaimList()
         startCountUpdateThread(documentCount)
+        Log.i(TAG, "Adjuster Activity Started")
     }
 
     private fun createClaimList() {
@@ -63,10 +82,13 @@ class AdjusterMainActivity : AppCompatActivity() {
                                 or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     )
                     intent.putExtra("ClaimId", claims[position].claimId)
+                    intent.putExtra("AdjusterId", adjuster.employeeId)
+                    intent.putExtra("Region", regionValue)
+                    intent.putExtra("UserName", userIdValue)
                     startActivity(intent)
                 }
 
-                val refreshButton = findViewById<ImageButton>(R.id.refreshButton)
+                val refreshButton = findViewById<Button>(R.id.refreshButton)
                 refreshButton.setOnClickListener {
                     scope.launch {
                         claims = db.queryClaims()
@@ -94,20 +116,18 @@ class AdjusterMainActivity : AppCompatActivity() {
 
     private fun startCountUpdateThread(documentCount: TextView?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val runnable: Runnable = object : Runnable {
-            override fun run() {
-                try {
-                    Thread.sleep(1000)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+        val runnable = Runnable {
+            try {
+                Thread.sleep(1000)
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+            Handler(Looper.getMainLooper()).post {
+                val scope = CoroutineScope(Dispatchers.Default)
+                scope.launch {
+                    val currentCount = db.getClaimCounts()
+                    documentCount?.text = String.format("Claims: %d", currentCount.total)
                 }
-                Handler(Looper.getMainLooper()).post(object : Runnable {
-                    override fun run() {
-                        val currentCount = db.dbCount()
-                        val countDisplay = "Documents: $currentCount"
-                        documentCount?.text = countDisplay
-                    }
-                })
             }
         }
         Thread(runnable).start()

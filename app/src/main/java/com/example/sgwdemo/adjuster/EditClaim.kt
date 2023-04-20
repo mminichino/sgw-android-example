@@ -25,11 +25,15 @@ class EditClaimActivity : AppCompatActivity() {
     private var cntx: Context = this
     var claimAmountInput: EditText? = null
     var claimId: String? = null
+    var adjusterId: String? = null
+    var userIdValue: String? = null
+    var regionValue: String? = null
     var documentId: String? = null
     var claimStatus: Int = 0
     var claimIdView: TextView? = null
     var claimDateView: TextView? = null
     var claimPaidView: TextView? = null
+    var claimAdjusterView: TextView? = null
     var spinner: Spinner? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +42,9 @@ class EditClaimActivity : AppCompatActivity() {
         val claimStatusList = arrayOf<String>("Open", "Closed")
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         claimId = intent.getStringExtra("ClaimId")
+        adjusterId = intent.getStringExtra("AdjusterId")
+        userIdValue = intent.getStringExtra("UserName")
+        regionValue = intent.getStringExtra("Region")
         val scope = CoroutineScope(Dispatchers.Default)
 
         scope.launch {
@@ -49,9 +56,17 @@ class EditClaimActivity : AppCompatActivity() {
                 claimAmountInput = findViewById(R.id.claimAmount)
                 claimDateView = findViewById(R.id.claimDate)
                 claimPaidView = findViewById(R.id.claimPaid)
+                claimAdjusterView = findViewById(R.id.claimAdjuster)
 
                 claimIdView!!.text = claim.claimId
                 claimAmountInput!!.setText(String.format("%.2f", claim.claimAmount))
+                if (claim.adjusterId == 0 ) {
+                    claimAdjusterView!!.text = resources.getString(R.string.noneText)
+                } else {
+                    val adjuster = db.getAdjusterById(claim.adjusterId.toString())
+                    claimAdjusterView!!.text =
+                        String.format("%s %s", adjuster.firstName, adjuster.lastName)
+                }
 
                 val dateString = claim.claimDate
                 val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
@@ -113,10 +128,21 @@ class EditClaimActivity : AppCompatActivity() {
         val mutableDoc = db.getDocument(documentId.toString())
             .setFloat("claim_amount", claimAmount)
             .setInt("claim_status", claimStatus)
+            .setInt("adjuster_id", adjusterId!!.toInt())
         db.updateDocument(mutableDoc)
 
+        returnToMainView()
+    }
+
+    fun onCancelTapped(view: View?) {
+        returnToMainView()
+    }
+
+    private fun returnToMainView() {
         val intent = Intent(cntx, AdjusterMainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        intent.putExtra("Region", regionValue)
+        intent.putExtra("UserName", userIdValue)
         startActivity(intent)
     }
 
