@@ -3,6 +3,8 @@ package com.example.sgwdemo.adjuster
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -18,8 +20,10 @@ import android.widget.RelativeLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import com.example.sgwdemo.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.io.File
+import com.example.sgwdemo.R
 
 
 class EditPhotos : AppCompatActivity() {
@@ -40,6 +44,9 @@ class EditPhotos : AppCompatActivity() {
         userIdValue = intent.getStringExtra("UserName")
         regionValue = intent.getStringExtra("Region")
 
+        val defaultBitmap = BitmapFactory.decodeResource(cntx.resources, R.drawable.default_profile_icon_24)
+        var imageList: ArrayList<Bitmap> = arrayListOf(defaultBitmap)
+
         val pickMultipleMedia =
             registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(5)) { uris ->
                 if (uris.isNotEmpty()) {
@@ -55,30 +62,10 @@ class EditPhotos : AppCompatActivity() {
             }
         }
 
-        val horizontalScrollView = HorizontalScrollView(this)
-        val layoutParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT)
-        horizontalScrollView.layoutParams = layoutParams
-
-        val linearLayout = LinearLayout(this)
-        val linearParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT)
-        linearLayout.layoutParams = linearParams
-
-        horizontalScrollView.addView(linearLayout)
-
-        val defaultImage = ImageView(this)
-        val defaultImageParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT)
-        defaultImage.layoutParams = defaultImageParams
-        defaultImage.setImageResource(R.drawable.default_profile_icon_24)
-        linearLayout.addView(defaultImage)
-
-        val linearLayoutOuter = findViewById<RelativeLayout>(R.id.imageViewer)
-        linearLayoutOuter?.addView(horizontalScrollView)
+        val recyclerview = findViewById<RecyclerView>(R.id.imageViewer)
+        recyclerview.layoutManager = LinearLayoutManager(this)
+        val adapter = PhotoAdapter(imageList)
+        recyclerview.adapter = adapter
 
         val photoGalleryButton = findViewById<Button>(R.id.galleryAddButton)
         photoGalleryButton.setOnClickListener {
