@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -19,7 +20,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.couchbase.lite.Blob
+import com.couchbase.lite.MutableDocument
 import com.example.sgwdemo.R
+import com.example.sgwdemo.cbdb.CouchbaseConnect
+import com.example.sgwdemo.models.Picture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 
@@ -32,6 +41,7 @@ class EditPhotos : AppCompatActivity() {
     var userIdValue: String? = null
     var regionValue: String? = null
     var pictureUri: Uri? = null
+    val imageList: ArrayList<Bitmap> = arrayListOf()
 
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -43,7 +53,8 @@ class EditPhotos : AppCompatActivity() {
         userIdValue = intent.getStringExtra("UserName")
         regionValue = intent.getStringExtra("Region")
 
-        val imageList: ArrayList<Bitmap> = arrayListOf()
+        getSavesPictures()
+
         val photoAdapter = PhotoAdapter(imageList)
 
         val recyclerview = findViewById<RecyclerView>(R.id.imageViewer)
@@ -110,7 +121,46 @@ class EditPhotos : AppCompatActivity() {
         return chooserIntent
     }
 
+    fun getSavesPictures() {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        val scope = CoroutineScope(Dispatchers.Default)
+        var pictures: ArrayList<Picture>
+
+        scope.launch {
+            pictures = db.getPictureIdByClaim(claimId!!)
+            for (picture in pictures) {
+                if (picture.recordId >= 1) {
+                    Log.i(TAG, "Loading ${picture.metaId}")
+                    val bytes = db.getImage(picture.metaId)
+                    bytes?.let {
+                        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                        imageList.add(bitmap)
+                    }
+                }
+            }
+        }
+    }
+
     fun onSaveTapped(view: View?) {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        var counter = 0
+        for (image in imageList) {
+            counter += 1
+            val docId = "picture::$claimId::$counter"
+            val blob = ByteArrayOutputStream()
+            image.compress(Bitmap.CompressFormat.PNG, 100, blob)
+            val byteArray = blob.toByteArray()
+            val mutableDoc = if (db.documentExists(docId)) {
+                db.getDocument(docId)
+            } else {
+                MutableDocument(docId)
+            }
+            mutableDoc.setBlob("image", Blob("image/png", byteArray))
+                .setString("claim_id", claimId)
+                .setString("type", "picture")
+                .setInt("record_id", counter)
+            db.updateDocument(mutableDoc)
+        }
         returnToPreviousView()
     }
 

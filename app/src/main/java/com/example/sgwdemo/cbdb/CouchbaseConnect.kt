@@ -1,6 +1,7 @@
 package com.example.sgwdemo.cbdb
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.models.ClaimGrid
@@ -13,6 +14,7 @@ import com.example.sgwdemo.models.Adjuster
 import com.example.sgwdemo.models.ClaimTotal
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
+import com.example.sgwdemo.models.Picture
 import kotlinx.coroutines.*
 import kotlin.math.pow
 import java.net.URI
@@ -377,6 +379,19 @@ class CouchbaseConnect(context: Context) {
         return db!!.getDocument(documentId)!!.toMutable()
     }
 
+    fun getImage(documentId: String): ByteArray? {
+        var bytes: ByteArray? = null
+        db?.let { database ->
+            val doc = database.getDocument(documentId)
+            bytes = doc?.getBlob("image")?.content
+        }
+        return bytes
+    }
+
+    fun documentExists(documentId: String): Boolean {
+        return db!!.getDocument(documentId) != null
+    }
+
     suspend fun getMutableDocById(documentId: String): MutableDocument {
         var mutableDoc = MutableDocument()
         return withContext(Dispatchers.IO) {
@@ -485,6 +500,32 @@ class CouchbaseConnect(context: Context) {
             if (adjuster.recordId == 0) throw DocNotFoundException("Adjuster $adjusterId not found")
         }
         return adjuster
+    }
+
+    suspend fun getPictureIdByClaim(claimId: String): ArrayList<Picture> {
+        val pictures = arrayListOf<Picture>()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.expression(Meta.id),
+                    SelectResult.expression(Expression.property(("record_id")))
+                )
+                .from(DataSource.database(db!!))
+                .where(
+                    Expression.property("type").equalTo(Expression.string("picture"))
+                        .and(
+                            Expression.property("claim_id").equalTo(Expression.string(claimId))
+                        )
+                )
+                .orderBy(Ordering.expression(Expression.property("record_id")))
+            query.execute().allResults().forEach { item ->
+                val gson = Gson()
+                val json = item.toJSON()
+                val picture = gson.fromJson(json, Picture::class.java)
+                pictures.add(picture)
+            }
+        }
+        return pictures
     }
 
     suspend fun getClaimCounts(): ClaimTotal {
