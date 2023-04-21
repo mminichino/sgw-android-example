@@ -31,6 +31,7 @@ class EditPhotos : AppCompatActivity() {
     var userIdValue: String? = null
     var regionValue: String? = null
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.actitivty_claim_photos)
