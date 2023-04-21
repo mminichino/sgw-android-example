@@ -121,7 +121,7 @@ class EditPhotos : AppCompatActivity() {
         return chooserIntent
     }
 
-    fun getSavesPictures() {
+    private fun getSavesPictures() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
         val scope = CoroutineScope(Dispatchers.Default)
         var pictures: ArrayList<Picture>
