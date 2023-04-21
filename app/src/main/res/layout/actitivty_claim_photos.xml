@@ -6,40 +6,6 @@
     android:orientation="vertical"
     tools:context=".adjuster.EditPhotos">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/imageViewer"
-        android:scrollbars="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="200dp" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="horizontal">
-        <Button
-            android:id="@+id/galleryAddButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|center_horizontal"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@color/white"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:text="@string/galleryPhotoButton"/>
-        <View
-            android:layout_width="20dp"
-            android:layout_height="0dp"/>
-        <Button
-            android:id="@+id/cameraAddButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|center_horizontal"
-            android:backgroundTint="@color/colorPrimary"
-            android:textColor="@color/white"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:text="@string/cameraPhotoButton"/>
-    </LinearLayout>
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -59,6 +25,18 @@
             android:layout_width="20dp"
             android:layout_height="0dp"/>
         <Button
+            android:id="@+id/galleryAddButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:backgroundTint="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:text="@string/galleryPhotoButton"/>
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp"/>
+        <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -70,5 +48,11 @@
             android:padding="@dimen/fab_margin"
             android:text="@string/cancelButton"/>
     </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/imageViewer"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_vertical|center_horizontal"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

@@ -1,6 +1,8 @@
 package com.example.sgwdemo.adjuster
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,12 +20,13 @@ class PhotoAdapter(var imageList: ArrayList<Bitmap>) : RecyclerView.Adapter<Phot
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         viewHolder.imageView.setImageBitmap(imageList[position])
+        Log.i("PhotoAdapter", "Add image at $position")
     }
 
-    public fun addImage(picture: Bitmap) {
-        val insertIndex = imageList.size
-        imageList.add(picture)
-        notifyItemInserted(insertIndex)
+    @SuppressLint("NotifyDataSetChanged")
+    fun update() {
+        this.notifyDataSetChanged()
+        Log.i("PhotoAdapter", "list size ${imageList.size}")
     }
 
     override fun getItemCount() = imageList.size

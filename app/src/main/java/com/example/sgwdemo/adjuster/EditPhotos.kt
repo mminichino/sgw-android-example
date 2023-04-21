@@ -1,29 +1,26 @@
 package com.example.sgwdemo.adjuster
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
-import android.widget.HorizontalScrollView
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.io.File
 import com.example.sgwdemo.R
+import java.io.File
 
 
 class EditPhotos : AppCompatActivity() {
@@ -34,7 +31,9 @@ class EditPhotos : AppCompatActivity() {
     var adjusterId: String? = null
     var userIdValue: String? = null
     var regionValue: String? = null
+    var pictureUri: Uri? = null
 
+    @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,28 +43,39 @@ class EditPhotos : AppCompatActivity() {
         userIdValue = intent.getStringExtra("UserName")
         regionValue = intent.getStringExtra("Region")
 
-        val defaultBitmap = BitmapFactory.decodeResource(cntx.resources, R.drawable.default_profile_icon_24)
-        var imageList: ArrayList<Bitmap> = arrayListOf(defaultBitmap)
-
-        val pickMultipleMedia =
-            registerForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(5)) { uris ->
-                if (uris.isNotEmpty()) {
-                    Log.d("PhotoPicker", "Number of items selected: ${uris.size}")
-                } else {
-                    Log.d("PhotoPicker", "No media selected")
-                }
-            }
-
-        val resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                val data: Intent? = result.data
-            }
-        }
+        val imageList: ArrayList<Bitmap> = arrayListOf()
+        val photoAdapter = PhotoAdapter(imageList)
 
         val recyclerview = findViewById<RecyclerView>(R.id.imageViewer)
         recyclerview.layoutManager = LinearLayoutManager(this)
-        val adapter = PhotoAdapter(imageList)
-        recyclerview.adapter = adapter
+        recyclerview.adapter = photoAdapter
+
+        val resultLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                Log.i(TAG, "Got result")
+                if (result.resultCode == RESULT_OK) {
+                    val data: Intent? = result.data
+                    var imageBitmap: Bitmap? = null
+                    if (data?.data != null) {
+                        Log.i(TAG, "Uri: $data?.data")
+                        data.data?.let {
+                            val source =ImageDecoder.createSource(this.contentResolver, it)
+                            imageBitmap = ImageDecoder.decodeBitmap(source)
+                        }
+                    } else {
+                        Log.i(TAG, "Got live picture")
+                        pictureUri?.let {
+                            val source = ImageDecoder.createSource(this.contentResolver, it)
+                            imageBitmap = ImageDecoder.decodeBitmap(source)
+                        }
+                    }
+                    imageBitmap?.let {
+                        imageList.add(it)
+                        Log.i(TAG, "Bitmap: ${it.byteCount}")
+                        photoAdapter.update()
+                    }
+                }
+            }
 
         val photoGalleryButton = findViewById<Button>(R.id.galleryAddButton)
         photoGalleryButton.setOnClickListener {
@@ -74,15 +84,21 @@ class EditPhotos : AppCompatActivity() {
     }
 
     private fun getCaptureImageOutputUri(): Uri {
-        val getImage = externalCacheDir
-        return Uri.fromFile(File(getImage?.path, "image.png"))
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val imageFile = File.createTempFile("image", ".jpg", storageDir)
+        return FileProvider.getUriForFile(
+            this,
+            "com.example.sgwdemo.fileprovider",
+            imageFile)
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun getPickImageChooserIntent(): Intent {
         val outputFileUri = getCaptureImageOutputUri()
+        pictureUri = outputFileUri
 
         val captureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
         val mediaIntent = Intent(MediaStore.ACTION_PICK_IMAGES)
         val galleryIntent = Intent(Intent.ACTION_VIEW)
         galleryIntent.type = "image/*"

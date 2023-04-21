@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.sgwdemo">
 
-    <uses-permission
-        android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -17,6 +17,15 @@
         android:theme="@style/Theme.Sgwdemo"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.sgwdemo.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <activity
             android:name=".login.LoginActivity"
             android:exported="true">
