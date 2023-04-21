@@ -29,6 +29,7 @@
         <activity android:name=".preferences.PreferenceActivity" />
         <activity android:name=".adjuster.AdjusterMainActivity" />
         <activity android:name=".adjuster.EditClaimActivity" />
+        <activity android:name=".adjuster.EditPhotos" />
     </application>
 
 </manifest>

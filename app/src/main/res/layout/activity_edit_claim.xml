@@ -153,6 +153,19 @@
             android:layout_width="20dp"
             android:layout_height="0dp"/>
         <Button
+            android:id="@+id/photoButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical|center_horizontal"
+            android:backgroundTint="@color/colorPrimary"
+            android:textColor="@color/white"
+            android:layout_marginTop="@dimen/fab_margin"
+            android:onClick="onPhotoTapped"
+            android:text="@string/photoButton"/>
+        <View
+            android:layout_width="20dp"
+            android:layout_height="0dp"/>
+        <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

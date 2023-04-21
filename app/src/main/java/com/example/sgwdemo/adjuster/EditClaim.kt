@@ -134,6 +134,19 @@ class EditClaimActivity : AppCompatActivity() {
         returnToMainView()
     }
 
+    fun onPhotoTapped(view: View?) {
+        val intent = Intent(cntx, EditPhotos::class.java)
+        intent.addFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK
+                    or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        )
+        intent.putExtra("ClaimId", claimId)
+        intent.putExtra("AdjusterId", adjusterId)
+        intent.putExtra("Region", regionValue)
+        intent.putExtra("UserName", userIdValue)
+        startActivity(intent)
+    }
+
     fun onCancelTapped(view: View?) {
         returnToMainView()
     }
