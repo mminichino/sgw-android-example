@@ -1,17 +1,20 @@
 package com.example.sgwdemo.adjuster
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sgwdemo.R
+import com.example.sgwdemo.models.PictureList
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 
-class PhotoAdapter(var imageList: ArrayList<Bitmap>) : RecyclerView.Adapter<PhotoAdapter.ViewHolder>() {
+class PhotoAdapter(var imageList: ArrayList<PictureList>) : RecyclerView.Adapter<PhotoAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context).inflate(R.layout.picture_card, parent, false)
@@ -19,7 +22,12 @@ class PhotoAdapter(var imageList: ArrayList<Bitmap>) : RecyclerView.Adapter<Phot
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        viewHolder.imageView.setImageBitmap(imageList[position])
+        val dateString = imageList[position].date
+        val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
+        val writeFormat = SimpleDateFormat("M/d/yy h:m a", Locale.US)
+        val date = readFormat.parse(dateString)
+        viewHolder.headerView.text = String.format("Image #%d - %s", position + 1, writeFormat.format(date!!))
+        viewHolder.imageView.setImageBitmap(imageList[position].bitmap)
         Log.i("PhotoAdapter", "Add image at $position")
     }
 
@@ -32,9 +40,11 @@ class PhotoAdapter(var imageList: ArrayList<Bitmap>) : RecyclerView.Adapter<Phot
     override fun getItemCount() = imageList.size
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val headerView: TextView
         val imageView: ImageView
 
         init {
+            headerView = view.findViewById(R.id.imageInfoPane)
             imageView = view.findViewById(R.id.imageViewPane)
         }
     }

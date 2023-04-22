@@ -34,6 +34,7 @@ class EditClaimActivity : AppCompatActivity() {
     var claimDateView: TextView? = null
     var claimPaidView: TextView? = null
     var claimAdjusterView: TextView? = null
+    var pictureCountView: TextView? = null
     var spinner: Spinner? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +50,7 @@ class EditClaimActivity : AppCompatActivity() {
 
         scope.launch {
             val claim = db.getClaimById("claim::${claimId}")
+            val pictures = db.getPictureIdByClaim(claimId!!)
 
             withContext(Dispatchers.Main) {
 
@@ -57,6 +59,7 @@ class EditClaimActivity : AppCompatActivity() {
                 claimDateView = findViewById(R.id.claimDate)
                 claimPaidView = findViewById(R.id.claimPaid)
                 claimAdjusterView = findViewById(R.id.claimAdjuster)
+                pictureCountView = findViewById(R.id.pictureCount)
 
                 claimIdView!!.text = claim.claimId
                 claimAmountInput!!.setText(String.format("%.2f", claim.claimAmount))
@@ -67,6 +70,7 @@ class EditClaimActivity : AppCompatActivity() {
                     claimAdjusterView!!.text =
                         String.format("%s %s", adjuster.firstName, adjuster.lastName)
                 }
+                pictureCountView!!.text = pictures.size.toString()
 
                 val dateString = claim.claimDate
                 val readFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)

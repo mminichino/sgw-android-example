@@ -2,6 +2,7 @@ package com.example.sgwdemo.cbdb
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import com.couchbase.lite.*
 import com.example.sgwdemo.models.ClaimGrid
@@ -15,6 +16,7 @@ import com.example.sgwdemo.models.ClaimTotal
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
 import com.example.sgwdemo.models.Picture
+import com.example.sgwdemo.models.PictureList
 import kotlinx.coroutines.*
 import kotlin.math.pow
 import java.net.URI
@@ -379,13 +381,18 @@ class CouchbaseConnect(context: Context) {
         return db!!.getDocument(documentId)!!.toMutable()
     }
 
-    fun getImage(documentId: String): ByteArray? {
-        var bytes: ByteArray? = null
+    fun getImage(documentId: String): PictureList? {
+        var picture: PictureList? = null
         db?.let { database ->
             val doc = database.getDocument(documentId)
-            bytes = doc?.getBlob("image")?.content
+            val bytes = doc?.getBlob("image")?.content
+            val date = doc?.getString("date")
+            bytes?.let {
+                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                picture = PictureList(bitmap, date!!)
+            }
         }
-        return bytes
+        return picture
     }
 
     fun documentExists(documentId: String): Boolean {
@@ -508,7 +515,8 @@ class CouchbaseConnect(context: Context) {
             val query = QueryBuilder
                 .select(
                     SelectResult.expression(Meta.id),
-                    SelectResult.expression(Expression.property(("record_id")))
+                    SelectResult.expression(Expression.property(("record_id"))),
+                    SelectResult.expression(Expression.property(("date")))
                 )
                 .from(DataSource.database(db!!))
                 .where(

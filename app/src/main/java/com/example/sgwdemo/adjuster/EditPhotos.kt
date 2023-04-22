@@ -4,16 +4,18 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -25,11 +27,13 @@ import com.couchbase.lite.MutableDocument
 import com.example.sgwdemo.R
 import com.example.sgwdemo.cbdb.CouchbaseConnect
 import com.example.sgwdemo.models.Picture
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.sgwdemo.models.PictureList
+import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class EditPhotos : AppCompatActivity() {
@@ -41,7 +45,9 @@ class EditPhotos : AppCompatActivity() {
     var userIdValue: String? = null
     var regionValue: String? = null
     var pictureUri: Uri? = null
-    val imageList: ArrayList<Bitmap> = arrayListOf()
+    var pictureCount: TextView? = null
+    val imageList: ArrayList<PictureList> = arrayListOf()
+    var handler: Handler = Handler(Looper.getMainLooper())
 
     @SuppressLint("NotifyDataSetChanged")
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -52,9 +58,10 @@ class EditPhotos : AppCompatActivity() {
         adjusterId = intent.getStringExtra("AdjusterId")
         userIdValue = intent.getStringExtra("UserName")
         regionValue = intent.getStringExtra("Region")
+        pictureCount = findViewById(R.id.pictureCount)
 
         getSavesPictures()
-
+        handler.post(runnableCode)
         val photoAdapter = PhotoAdapter(imageList)
 
         val recyclerview = findViewById<RecyclerView>(R.id.imageViewer)
@@ -81,7 +88,10 @@ class EditPhotos : AppCompatActivity() {
                         }
                     }
                     imageBitmap?.let {
-                        imageList.add(it)
+                        val currentTimeFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US)
+                        val currentDate = currentTimeFormat.format(Date())
+                        val pictureRecord = PictureList(it, currentDate)
+                        imageList.add(pictureRecord)
                         Log.i(TAG, "Bitmap: ${it.byteCount}")
                         photoAdapter.update()
                     }
@@ -111,9 +121,7 @@ class EditPhotos : AppCompatActivity() {
         val captureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
         val mediaIntent = Intent(MediaStore.ACTION_PICK_IMAGES)
-        val galleryIntent = Intent(Intent.ACTION_VIEW)
-        galleryIntent.type = "image/*"
-        val extraIntents = arrayOf(mediaIntent, galleryIntent)
+        val extraIntents = arrayOf(mediaIntent)
 
         val chooserIntent = Intent.createChooser(captureIntent, "Select source")
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents)
@@ -123,22 +131,24 @@ class EditPhotos : AppCompatActivity() {
 
     private fun getSavesPictures() {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val scope = CoroutineScope(Dispatchers.Default)
         var pictures: ArrayList<Picture>
 
-        scope.launch {
+        runBlocking {
             pictures = db.getPictureIdByClaim(claimId!!)
             for (picture in pictures) {
-                if (picture.recordId >= 1) {
-                    Log.i(TAG, "Loading ${picture.metaId}")
-                    val bytes = db.getImage(picture.metaId)
-                    bytes?.let {
-                        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        imageList.add(bitmap)
-                    }
+                Log.i(TAG, "Loading ${picture.metaId}")
+                val pictureRecord = db.getImage(picture.metaId)
+                pictureRecord?.let {
+                    imageList.add(pictureRecord)
                 }
             }
         }
+    }
+
+    private fun numPictures(): Int = runBlocking {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        val pictures = db.getPictureIdByClaim(claimId!!)
+        return@runBlocking pictures.size
     }
 
     fun onSaveTapped(view: View?) {
@@ -148,7 +158,7 @@ class EditPhotos : AppCompatActivity() {
             counter += 1
             val docId = "picture::$claimId::$counter"
             val blob = ByteArrayOutputStream()
-            image.compress(Bitmap.CompressFormat.PNG, 100, blob)
+            image.bitmap.compress(Bitmap.CompressFormat.PNG, 100, blob)
             val byteArray = blob.toByteArray()
             val mutableDoc = if (db.documentExists(docId)) {
                 db.getDocument(docId)
@@ -158,6 +168,8 @@ class EditPhotos : AppCompatActivity() {
             mutableDoc.setBlob("image", Blob("image/png", byteArray))
                 .setString("claim_id", claimId)
                 .setString("type", "picture")
+                .setString("date", image.date)
+                .setString("region", regionValue)
                 .setInt("record_id", counter)
             db.updateDocument(mutableDoc)
         }
@@ -170,6 +182,7 @@ class EditPhotos : AppCompatActivity() {
 
     private fun returnToPreviousView() {
         val intent = Intent(cntx, EditClaimActivity::class.java)
+        handler.removeCallbacks(runnableCode)
         intent.addFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK
                     or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -179,5 +192,14 @@ class EditPhotos : AppCompatActivity() {
         intent.putExtra("Region", regionValue)
         intent.putExtra("UserName", userIdValue)
         startActivity(intent)
+    }
+
+    private val runnableCode: Runnable = object : Runnable {
+        override fun run() {
+            val currentCount = imageList.size
+            val countDisplay = "Images: $currentCount"
+            pictureCount?.text = countDisplay
+            handler.postDelayed(this, 1000)
+        }
     }
 }

@@ -169,6 +169,7 @@ class LoginActivity : AppCompatActivity() {
                 } else {
                     showMessageDialog("Unauthorized",
                         "Login was not successful")
+                    progress!!.visibility = View.INVISIBLE
                 }
             }
         })

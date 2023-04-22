@@ -47,6 +47,22 @@
             android:onClick="onCancelTapped"
             android:padding="@dimen/fab_margin"
             android:text="@string/cancelButton"/>
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_gravity="center">
+        <TextView
+            android:id="@+id/pictureCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/pictureCount"
+            android:padding="8dp"
+            android:textSize="20sp" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

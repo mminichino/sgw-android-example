@@ -62,4 +62,6 @@
     <string name="galleryPhotoButton">Photos</string>
     <string name="cameraPhotoButton">Camera</string>
     <string name="claimPicture">Claim Picture</string>
+    <string name="pictureCount">Images:</string>
+    <string name="pictureCountLabel">Images:</string>
 </resources>
