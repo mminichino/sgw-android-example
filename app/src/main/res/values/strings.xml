@@ -59,7 +59,7 @@
     <string name="cancelButton">Cancel</string>
     <string name="photoButton">Pictures</string>
     <string name="addPhotoButton">Add</string>
-    <string name="galleryPhotoButton">Photos</string>
+    <string name="galleryPhotoButton">Add</string>
     <string name="cameraPhotoButton">Camera</string>
     <string name="claimPicture">Claim Picture</string>
     <string name="pictureCount">Images:</string>

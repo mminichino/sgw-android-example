@@ -197,7 +197,11 @@ class EditPhotos : AppCompatActivity() {
     private val runnableCode: Runnable = object : Runnable {
         override fun run() {
             val currentCount = imageList.size
-            val countDisplay = "Images: $currentCount"
+            val countDisplay = if (currentCount == 0) {
+                "No Images. Click ADD to attach an image."
+            } else {
+                "Images: $currentCount"
+            }
             pictureCount?.text = countDisplay
             handler.postDelayed(this, 1000)
         }
