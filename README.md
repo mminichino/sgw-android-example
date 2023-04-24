@@ -1,4 +1,4 @@
-# Couchbase Android Sync Gateway Demo 3.2
+# Couchbase Android Sync Gateway Demo 3.3
 
 Clone into Android Studio.
 
@@ -10,6 +10,7 @@ The password for all users is "password". To reset and start from scratch, use t
 ![Access](doc/access-2.jpg)
 ![Access](doc/access-3.jpg)
 ![Access](doc/access-4.jpg)
+![Access](doc/access-5.jpg)
 ![Login](doc/login-1.jpg)
 
 ## Backend Container
