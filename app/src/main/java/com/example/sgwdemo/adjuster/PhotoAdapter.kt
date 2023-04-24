@@ -16,6 +16,8 @@ import java.util.Locale
 
 class PhotoAdapter(var imageList: ArrayList<PictureList>) : RecyclerView.Adapter<PhotoAdapter.ViewHolder>() {
 
+    private var onClickListener: OnClickListener? = null
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context).inflate(R.layout.picture_card, parent, false)
         return ViewHolder(inflater)
@@ -28,6 +30,11 @@ class PhotoAdapter(var imageList: ArrayList<PictureList>) : RecyclerView.Adapter
         val date = readFormat.parse(dateString)
         viewHolder.headerView.text = String.format("Image #%d - %s", position + 1, writeFormat.format(date!!))
         viewHolder.imageView.setImageBitmap(imageList[position].bitmap)
+        viewHolder.imageView.setOnClickListener {
+            if (onClickListener != null) {
+                onClickListener!!.onClick(position)
+            }
+        }
         Log.i("PhotoAdapter", "Add image at $position")
     }
 
@@ -38,6 +45,14 @@ class PhotoAdapter(var imageList: ArrayList<PictureList>) : RecyclerView.Adapter
     }
 
     override fun getItemCount() = imageList.size
+
+    fun setOnClickListener(onClickListener: OnClickListener) {
+        this.onClickListener = onClickListener
+    }
+
+    interface OnClickListener {
+        fun onClick(position: Int)
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val headerView: TextView

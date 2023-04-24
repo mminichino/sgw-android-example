@@ -539,17 +539,19 @@ class CouchbaseConnect(context: Context) {
     suspend fun getClaimCounts(): ClaimTotal {
         var total = ClaimTotal()
         retryBlock {
-            val query = QueryBuilder
-                .select(
-                    SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
-                )
-                .from(DataSource.database(db!!))
-                .where(
-                    Expression.property("type").equalTo(Expression.string("claim"))
-                )
-            query.execute().allResults().forEach { item ->
-                val json = item.toJSON()
-                total = gson.fromJson(json, ClaimTotal::class.java)
+            db?.let {
+                val query = QueryBuilder
+                    .select(
+                        SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
+                    )
+                    .from(DataSource.database(db!!))
+                    .where(
+                        Expression.property("type").equalTo(Expression.string("claim"))
+                    )
+                query.execute().allResults().forEach { item ->
+                    val json = item.toJSON()
+                    total = gson.fromJson(json, ClaimTotal::class.java)
+                }
             }
         }
         return total

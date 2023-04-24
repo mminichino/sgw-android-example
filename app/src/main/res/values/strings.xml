@@ -64,4 +64,6 @@
     <string name="claimPicture">Claim Picture</string>
     <string name="pictureCount">Images:</string>
     <string name="pictureCountLabel">Images:</string>
+    <string name="imageViewer">Image View</string>
+    <string name="doneButton">Done</string>
 </resources>

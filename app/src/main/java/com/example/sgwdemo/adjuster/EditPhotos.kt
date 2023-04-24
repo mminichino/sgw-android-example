@@ -31,6 +31,7 @@ import com.example.sgwdemo.models.PictureList
 import kotlinx.coroutines.runBlocking
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -102,6 +103,21 @@ class EditPhotos : AppCompatActivity() {
         photoGalleryButton.setOnClickListener {
             resultLauncher.launch(getPickImageChooserIntent())
         }
+
+        photoAdapter.setOnClickListener(object :
+            PhotoAdapter.OnClickListener {
+            override fun onClick(position: Int) {
+                Log.i(TAG, "Calling Picture Viewer on Image $position")
+                val intent = Intent(cntx, ImageViewer::class.java)
+                val bitmap = imageList[position].bitmap
+                val filename = "view_bitmap.png"
+                val stream: FileOutputStream = openFileOutput(filename, MODE_PRIVATE)
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                stream.close()
+                intent.putExtra("image", filename)
+                startActivity(intent)
+            }
+        })
     }
 
     private fun getCaptureImageOutputUri(): Uri {

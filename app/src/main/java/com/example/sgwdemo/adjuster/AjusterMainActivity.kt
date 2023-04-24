@@ -34,6 +34,7 @@ class AdjusterMainActivity : AppCompatActivity() {
     var regionValue: String? = null
     var adjuster = Adjuster()
     var progress: CircularProgressIndicator? = null
+    var handler: Handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,7 @@ class AdjusterMainActivity : AppCompatActivity() {
             regionValue?.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() })
 
         createClaimList()
-        startCountUpdateThread(documentCount)
+        handler.post(runnableCode)
         Log.i(TAG, "Adjuster Activity Started")
     }
 
@@ -114,27 +115,21 @@ class AdjusterMainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCountUpdateThread(documentCount: TextView?) {
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val runnable = Runnable {
-            try {
-                Thread.sleep(1000)
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
+    private val runnableCode: Runnable = object : Runnable {
+        override fun run() {
+            val scope = CoroutineScope(Dispatchers.Default)
+            scope.launch {
+                val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+                val currentCount = db.getClaimCounts()
+                documentCount?.text = String.format("Claims: %d", currentCount.total)
             }
-            Handler(Looper.getMainLooper()).post {
-                val scope = CoroutineScope(Dispatchers.Default)
-                scope.launch {
-                    val currentCount = db.getClaimCounts()
-                    documentCount?.text = String.format("Claims: %d", currentCount.total)
-                }
-            }
+            handler.postDelayed(this, 1000)
         }
-        Thread(runnable).start()
     }
 
     fun onLogoutTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        handler.removeCallbacks(runnableCode)
         db.closeDatabase()
         val intent = Intent(cntx, LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
