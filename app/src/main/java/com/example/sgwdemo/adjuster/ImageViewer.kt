@@ -1,6 +1,5 @@
 package com.example.sgwdemo.adjuster
 
-import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
@@ -10,10 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.sgwdemo.R
 import java.io.File
 
-class ImageViewer : AppCompatActivity() {
+private const val TAG = "ImageViewer"
 
-    private var TAG = "ImageViewer"
-    private var cntx: Context = this
+class ImageViewer : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
