@@ -15,13 +15,13 @@ The password for all users is "password". To reset and start from scratch, use t
 
 ## Backend Container
 
-To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the demo use the [mobiledemo](https://hub.docker.com/r/mminichino/mobiledemo) container.
-You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/1.0.0/rundemo.sh) to run and manage the container.
+To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the demo use the [mobiledemo](https://hub.docker.com/r/mminichino/mobiledemo) container version 1.0.2. Note: Android Demo 3.x requires a version 1.x backend container.
+You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/1.0.3/rundemo.sh) to run and manage the container.
 Run the following to download the utility:
 ```
-curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/1.0.0/rundemo.sh
+curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/1.0.3/rundemo.sh
 ```
-To build the container yourself, you can access the source here: [mobile-demo-container](https://github.com/mminichino/mobile-demo-container).
+To build the container yourself, you can access the source here: [mobile-demo-container](https://github.com/mminichino/mobile-demo-container/tree/Version_1.0).
 
 ### Notes
 If you run the container on the same system running Android Studio (such as your desktop) use the system's IP address, not localhost (127.0.0.1).
