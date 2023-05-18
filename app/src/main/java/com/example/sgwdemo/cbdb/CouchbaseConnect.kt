@@ -223,10 +223,12 @@ class CouchbaseConnect(context: Context) {
             e.printStackTrace()
         }
         db ?: throw IllegalStateException("Database open failed")
-        db!!.scopes.forEach { scope ->
-            Log.i(TAG, "Scope :: " + scope.name)
-            scope.collections.forEach {
-                Log.i(TAG,"    Collection :: " + it.name)
+        db?.let { lite ->
+            lite.scopes.forEach { scope ->
+                Log.i(TAG, "Scope :: " + scope.name)
+                scope.collections.forEach { collection ->
+                    Log.i(TAG,"    Collection :: " + collection.name)
+                }
             }
         }
     }
@@ -255,7 +257,6 @@ class CouchbaseConnect(context: Context) {
         val connectString = "ws://$gateway:4984/$database"
         Log.i(TAG, "Sync init -> $connectString")
         Log.i(TAG, "Sync Session Cookie -> $cookie")
-        Log.i(TAG, "Collections: ${db!!.collections}")
 
         db?.let { liteDatabase ->
             replicator = Replicator(
@@ -424,7 +425,7 @@ class CouchbaseConnect(context: Context) {
     }
 
     suspend fun queryClaims(): ArrayList<ClaimGrid> {
-        val claims = arrayListOf<ClaimGrid>()
+        val claimData = arrayListOf<ClaimGrid>()
         Log.i(TAG, "Begin Claim Query")
         retryBlock {
             val query = QueryBuilder
@@ -435,18 +436,12 @@ class CouchbaseConnect(context: Context) {
                     SelectResult.expression(Expression.property("claim_amount").from("claim")),
                     SelectResult.expression(Expression.property("claim_status").from("claim")),
                 )
-                .from(DataSource.database(db!!).`as`("claim"))
+                .from(DataSource.collection(claims!!).`as`("claim"))
                 .join(
-                    Join.join(DataSource.database(db!!).`as`("customer"))
+                    Join.join(DataSource.collection(customer!!).`as`("customer"))
                         .on(
                             Expression.property("customer_id").from("claim")
                                 .equalTo(Expression.property("customer_id").from("customer"))
-                        )
-                )
-                .where(
-                    Expression.property("type").from("claim").equalTo(Expression.string("claim"))
-                        .and(
-                            Expression.property("type").from("customer").equalTo(Expression.string("customer"))
                         )
                 )
                 .orderBy(Ordering.expression(Expression.property("claim_id").from("claim")))
@@ -454,11 +449,11 @@ class CouchbaseConnect(context: Context) {
                 val gson = Gson()
                 val json = item.toJSON()
                 val claim = gson.fromJson(json, ClaimGrid::class.java)
-                claims.add(claim)
+                claimData.add(claim)
             }
-           if (claims.size == 0) throw DocNotFoundException("No claim records found")
+           if (claimData.size == 0) throw DocNotFoundException("No claim records found")
         }
-        return claims
+        return claimData
     }
 
     suspend fun queryEmployees(): ArrayList<Employee> {
@@ -484,26 +479,26 @@ class CouchbaseConnect(context: Context) {
         }
     }
 
-    fun getDocument(documentId: String): MutableDocument {
-        return db!!.getDocument(documentId)!!.toMutable()
+    fun getDocument(collection: Collection, documentId: String): MutableDocument {
+        return collection.getDocument(documentId)!!.toMutable()
     }
 
     fun getImage(documentId: String): PictureList? {
-        var picture: PictureList? = null
-        db?.let { database ->
-            val doc = database.getDocument(documentId)
+        var pictureData: PictureList? = null
+        picture?.let { pic ->
+            val doc = pic.getDocument(documentId)
             val bytes = doc?.getBlob("image")?.content
             val date = doc?.getString("date")
             bytes?.let {
                 val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                picture = PictureList(bitmap, date!!)
+                pictureData = PictureList(bitmap, date!!)
             }
         }
-        return picture
+        return pictureData
     }
 
-    fun documentExists(documentId: String): Boolean {
-        return db!!.getDocument(documentId) != null
+    fun documentExists(collection: Collection, documentId: String): Boolean {
+        return collection.getDocument(documentId) != null
     }
 
     suspend fun getMutableDocById(documentId: String): MutableDocument {
@@ -537,20 +532,20 @@ class CouchbaseConnect(context: Context) {
     }
 
     suspend fun getClaimById(documentId: String): Claim {
-        var claim = Claim()
+        var claimData = Claim()
         retryBlock {
-            db?.let { database ->
-                val doc = database.getDocument(documentId)
+            claims?.let { claim ->
+                val doc = claim.getDocument(documentId)
                 doc?.let { document ->
                     val json = document.toJSON()
                     json?.let {
-                        claim = gson.fromJson(json, Claim::class.java)
+                        claimData = gson.fromJson(json, Claim::class.java)
                     }
                 }
             }
-            if (claim.recordId == 0) throw DocNotFoundException("Doc $documentId not found")
+            if (claimData.claimId.isEmpty()) throw DocNotFoundException("Doc $documentId not found")
         }
-        return claim
+        return claimData
     }
 
     suspend fun getEmployeeByUserName(userName: String): Employee {
@@ -591,53 +586,47 @@ class CouchbaseConnect(context: Context) {
     }
 
     suspend fun getAdjusterByUserName(userName: String): Adjuster {
-        var adjuster = Adjuster()
+        var adjusterData = Adjuster()
         retryBlock {
             val query = QueryBuilder
                 .select(
                     SelectResult.all()
                 )
-                .from(DataSource.database(db!!))
+                .from(DataSource.collection(adjuster!!))
                 .where(
-                    Expression.property("type").equalTo(Expression.string("adjuster"))
-                        .and(
-                            Expression.property("user_id").equalTo(Expression.string(userName))
-                        )
+                    Expression.property("user_id").equalTo(Expression.string(userName))
                 )
             query.execute().allResults().forEach { item ->
                 val json = item.getDictionary(0)?.toJSON()
-                adjuster = gson.fromJson(json, Adjuster::class.java)
+                adjusterData = gson.fromJson(json, Adjuster::class.java)
             }
-            if (adjuster.recordId == 0) throw DocNotFoundException("Adjuster $userName not found")
+            if (adjusterData.userId.isEmpty()) throw DocNotFoundException("Adjuster $userName not found")
         }
-        return adjuster
+        return adjusterData
     }
 
     suspend fun getAdjusterById(adjusterId: String): Adjuster {
-        var adjuster = Adjuster()
+        var adjusterData = Adjuster()
         retryBlock {
             val query = QueryBuilder
                 .select(
                     SelectResult.all()
                 )
-                .from(DataSource.database(db!!))
+                .from(DataSource.collection(adjuster!!))
                 .where(
-                    Expression.property("type").equalTo(Expression.string("adjuster"))
-                        .and(
-                            Expression.property("employee_id").equalTo(Expression.string(adjusterId))
-                        )
+                    Expression.property("adjuster_id").equalTo(Expression.string(adjusterId))
                 )
             query.execute().allResults().forEach { item ->
                 val json = item.getDictionary(0)?.toJSON()
-                adjuster = gson.fromJson(json, Adjuster::class.java)
+                adjusterData = gson.fromJson(json, Adjuster::class.java)
             }
-            if (adjuster.recordId == 0) throw DocNotFoundException("Adjuster $adjusterId not found")
+            if (adjusterData.userId.isEmpty()) throw DocNotFoundException("Adjuster $adjusterId not found")
         }
-        return adjuster
+        return adjusterData
     }
 
     suspend fun getPictureIdByClaim(claimId: String): ArrayList<Picture> {
-        val pictures = arrayListOf<Picture>()
+        val pictureData = arrayListOf<Picture>()
         retryBlock {
             val query = QueryBuilder
                 .select(
@@ -645,36 +634,30 @@ class CouchbaseConnect(context: Context) {
                     SelectResult.expression(Expression.property(("record_id"))),
                     SelectResult.expression(Expression.property(("date")))
                 )
-                .from(DataSource.database(db!!))
+                .from(DataSource.collection(picture!!))
                 .where(
-                    Expression.property("type").equalTo(Expression.string("picture"))
-                        .and(
-                            Expression.property("claim_id").equalTo(Expression.string(claimId))
-                        )
+                    Expression.property("claim_id").equalTo(Expression.string(claimId))
                 )
                 .orderBy(Ordering.expression(Expression.property("record_id")))
             query.execute().allResults().forEach { item ->
                 val gson = Gson()
                 val json = item.toJSON()
                 val picture = gson.fromJson(json, Picture::class.java)
-                pictures.add(picture)
+                pictureData.add(picture)
             }
         }
-        return pictures
+        return pictureData
     }
 
     suspend fun getClaimCounts(): ClaimTotal {
         var total = ClaimTotal()
         retryBlock {
-            db?.let {
+            claims?.let { claim ->
                 val query = QueryBuilder
                     .select(
                         SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
                     )
-                    .from(DataSource.database(db!!))
-                    .where(
-                        Expression.property("type").equalTo(Expression.string("claim"))
-                    )
+                    .from(DataSource.collection(claim))
                 query.execute().allResults().forEach { item ->
                     val json = item.toJSON()
                     total = gson.fromJson(json, ClaimTotal::class.java)
@@ -687,12 +670,12 @@ class CouchbaseConnect(context: Context) {
     suspend fun getEmployeeCounts(): EmployeeTotal {
         var total = EmployeeTotal()
         retryBlock {
-            db?.let {
+            employees?.let { employee ->
                 val query = QueryBuilder
                     .select(
                         SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
                     )
-                    .from(DataSource.collection(employees!!))
+                    .from(DataSource.collection(employee))
                 query.execute().allResults().forEach { item ->
                     val json = item.toJSON()
                     total = gson.fromJson(json, EmployeeTotal::class.java)
@@ -702,8 +685,8 @@ class CouchbaseConnect(context: Context) {
         return total
     }
 
-    fun updateDocument(doc: MutableDocument) {
-        db!!.save(doc)
+    fun updateDocument(collection: Collection, doc: MutableDocument) {
+        collection.save(doc)
     }
 
     fun dbCount(collection: Collection): String {
@@ -720,13 +703,6 @@ class CouchbaseConnect(context: Context) {
                 retry -= 1
             }
         }
-    }
-
-    suspend fun waitForDocuments(collection: Collection, maxDelay: Long, checkPeriod: Long) : Boolean{
-        if(maxDelay < 0) return false
-        if(dbCount(collection).toInt() > 0) return true
-        delay(checkPeriod)
-        return waitForDocuments(collection, maxDelay - checkPeriod, checkPeriod)
     }
 
     fun closeDatabase() {

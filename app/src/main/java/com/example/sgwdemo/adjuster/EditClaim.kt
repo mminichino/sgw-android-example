@@ -129,11 +129,11 @@ class EditClaimActivity : AppCompatActivity() {
         }
 
         val claimAmount = claimAmountString.toString().toFloat()
-        val mutableDoc = db.getDocument(documentId.toString())
+        val mutableDoc = db.getDocument(db.claims!!, documentId.toString())
             .setFloat("claim_amount", claimAmount)
             .setInt("claim_status", claimStatus)
             .setInt("adjuster_id", adjusterId!!.toInt())
-        db.updateDocument(mutableDoc)
+        db.updateDocument(db.claims!!, mutableDoc)
 
         returnToMainView()
     }

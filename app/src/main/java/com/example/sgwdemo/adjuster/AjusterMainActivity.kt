@@ -83,7 +83,7 @@ class AdjusterMainActivity : AppCompatActivity() {
                                 or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     )
                     intent.putExtra("ClaimId", claims[position].claimId)
-                    intent.putExtra("AdjusterId", adjuster.employeeId)
+                    intent.putExtra("AdjusterId", adjuster.adjusterId)
                     intent.putExtra("Region", regionValue)
                     intent.putExtra("UserName", userIdValue)
                     startActivity(intent)

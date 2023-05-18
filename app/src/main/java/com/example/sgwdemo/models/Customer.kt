@@ -1,7 +1,7 @@
 package com.example.sgwdemo.models
 
 data class Customer (
-        val recordId: Int,
+        val recordId: String,
         val customerId: String,
         val name: String,
         val userId: String,
@@ -16,6 +16,5 @@ data class Customer (
         val phone: String,
         val dateOfBirth: String,
         val password: String,
-        val region: String,
-        val type: String
+        val region: String
         )

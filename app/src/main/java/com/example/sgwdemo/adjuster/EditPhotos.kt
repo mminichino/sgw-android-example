@@ -176,8 +176,8 @@ class EditPhotos : AppCompatActivity() {
             val blob = ByteArrayOutputStream()
             image.bitmap.compress(Bitmap.CompressFormat.PNG, 100, blob)
             val byteArray = blob.toByteArray()
-            val mutableDoc = if (db.documentExists(docId)) {
-                db.getDocument(docId)
+            val mutableDoc = if (db.documentExists(db.picture!!, docId)) {
+                db.getDocument(db.picture!!, docId)
             } else {
                 MutableDocument(docId)
             }
@@ -187,7 +187,7 @@ class EditPhotos : AppCompatActivity() {
                 .setString("date", image.date)
                 .setString("region", regionValue)
                 .setInt("record_id", counter)
-            db.updateDocument(mutableDoc)
+            db.updateDocument(db.picture!!, mutableDoc)
         }
         returnToPreviousView()
     }
