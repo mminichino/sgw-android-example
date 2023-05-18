@@ -30,19 +30,20 @@ class MainActivity : AppCompatActivity() {
     var dumpView: ListView? = null
     var documentCount: TextView? = null
     var employeeIdValue: String? = null
-    var storeIdValue: String? = null
+    var locationIdValue: String? = null
     var employeeName: TextView? = null
     var employeeEmail: TextView? = null
     var employeeAddress: TextView? = null
     var employeePhone: TextView? = null
     var employeeZipCode: TextView? = null
+    var handler: Handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         employeeIdValue = intent.getStringExtra("UserName")
-        storeIdValue = intent.getStringExtra("StoreID")
+        locationIdValue = intent.getStringExtra("LocationID")
         showButton = findViewById(R.id.showData)
         dumpButton = findViewById(R.id.showDump)
         dumpView = findViewById(R.id.dumpTable)
@@ -54,7 +55,7 @@ class MainActivity : AppCompatActivity() {
         employeeZipCode = findViewById(R.id.employeeZipCode)
 
         populateEmployeeInfo(employeeIdValue!!)
-        startCountUpdateThread(documentCount)
+//        handler.post(runnableCode)
         Log.i(TAG, "Started Main Activity")
     }
 
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                 dumpView!!.adapter = adapter
 
                 dumpView!!.setOnItemClickListener { _, _, position, _ ->
-                    populateEmployeeInfo(employees[position].employeeId)
+                    populateEmployeeInfo(employees[position].userId)
                 }
 
                 if (employees.isEmpty()) {
@@ -89,25 +90,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startCountUpdateThread(documentCount: TextView?) {
-        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        val runnable: Runnable = object : Runnable {
-            override fun run() {
-                try {
-                    Thread.sleep(1000)
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
-                }
-                Handler(Looper.getMainLooper()).post(object : Runnable {
-                    override fun run() {
-                        val currentCount = db.dbCount()
-                        val countDisplay = "Documents: $currentCount"
-                        documentCount?.text = countDisplay
-                    }
-                })
+    private val runnableCode: Runnable = object : Runnable {
+        override fun run() {
+            val scope = CoroutineScope(Dispatchers.Default)
+            scope.launch {
+                val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+                val currentCount = db.getEmployeeCounts()
+                documentCount?.text = String.format("Employees: %d", currentCount.total)
             }
+            handler.postDelayed(this, 1000)
         }
-        Thread(runnable).start()
     }
 
     private fun populateEmployeeInfo(employeeId: String) {
@@ -116,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         val timeNow = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
 
         scope.launch {
-            val employee = db.getEmployeeById("employees:${employeeId}")
+            val employee = db.getEmployeeByUserName(employeeId)
             withContext(Dispatchers.Main) {
                 employeeName?.text = employee.name
                 employeeAddress?.text = employee.address
@@ -124,19 +116,20 @@ class MainActivity : AppCompatActivity() {
                 employeePhone?.text = employee.phone
                 employeeZipCode?.text = employee.zipCode
 
-                val timeCards = ArrayList<String>(employee.timeCards)
-                val mutableDoc = db.getDocument("employees:${employeeId}")
-                    .setString("last_access", timeNow.toString())
-                timeCards.add(timeNow.toString())
-                val timeCardsUpdate = MutableArray(timeCards.toMutableList() as List<Any>)
-                mutableDoc.setArray("timecards", timeCardsUpdate)
-                db.updateDocument(mutableDoc)
+//                val timeCards = ArrayList<String>(employee.timeCards)
+//                val mutableDoc = db.getDocument("employees:${employeeId}")
+//                    .setString("last_access", timeNow.toString())
+//                timeCards.add(timeNow.toString())
+//                val timeCardsUpdate = MutableArray(timeCards.toMutableList() as List<Any>)
+//                mutableDoc.setArray("timecards", timeCardsUpdate)
+//                db.updateDocument(mutableDoc)
             }
         }
     }
 
     fun onLogoutTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+//        handler.removeCallbacks(runnableCode)
         db.closeDatabase()
         val intent = Intent(cntx, LoginActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)

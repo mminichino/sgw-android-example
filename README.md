@@ -20,6 +20,8 @@ You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-cont
 Run the following to download the utility:
 ```
 curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/1.0.3/rundemo.sh
+```
+```
 chmod +x rundemo.sh
 ```
 To build the container yourself, you can access the source here: [mobile-demo-container](https://github.com/mminichino/mobile-demo-container/tree/Version_1.0).

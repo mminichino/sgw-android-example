@@ -147,13 +147,13 @@ class LoginActivity : AppCompatActivity() {
                         username, response.body()!!.cookie_name, response.body()!!.session_id
                     )
 
-                    if (activeDemo == "employees") {
+                    if (activeDemo == "timecard") {
                         val intent = Intent(cntx, MainActivity::class.java)
                         intent.addFlags(
                             Intent.FLAG_ACTIVITY_NEW_TASK
                                     or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         )
-                        intent.putExtra("StoreID", groupTag)
+                        intent.putExtra("LocationID", groupTag)
                         intent.putExtra("UserName", username)
                         startActivity(intent)
                     } else {
@@ -200,6 +200,7 @@ class LoginActivity : AppCompatActivity() {
         val databaseName = pref.getString(R.string.databaseNameKey.toString(), "")
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(this)
 
+        Log.d(TAG, "Setup DB with $databaseName $gatewayAddress $username $sessionId $sessionCookie")
         db.openDatabase(databaseName!!, gatewayAddress!!, username, sessionId, sessionCookie)
     }
 }

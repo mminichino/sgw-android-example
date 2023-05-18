@@ -1,7 +1,6 @@
 package com.example.sgwdemo.cbdb
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
 import com.couchbase.lite.*
@@ -10,14 +9,17 @@ import com.example.sgwdemo.models.Claim
 import com.google.gson.Gson
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.couchbase.lite.Collection
 import com.couchbase.lite.Function
 import com.example.sgwdemo.models.Adjuster
 import com.example.sgwdemo.models.ClaimTotal
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
+import com.example.sgwdemo.models.EmployeeTotal
 import com.example.sgwdemo.models.Picture
 import com.example.sgwdemo.models.PictureList
 import kotlinx.coroutines.*
+import java.lang.IllegalStateException
 import kotlin.math.pow
 import java.net.URI
 
@@ -53,14 +55,70 @@ class CouchbaseConnect(context: Context) {
     private var TAG = "CouchbaseConnect"
     private var cntx: Context = context
 
-    var employeesDatabase: Database? = null
-    var adjusterDatabase: Database? = null
+    var timecardDb: Database? = null
+    var insuranceDb: Database? = null
 
-    var employeesDatabaseOpen: Boolean = false
-    var adjusterDatabaseOpen: Boolean = false
+    var timecardDbOpen: Boolean = false
+    var insuranceDbOpen: Boolean = false
+
+    private val timecardScope = "data"
+    private val timecardCollections = hashMapOf(
+        "employees" to listOf(
+            "record_id",
+            "location_id",
+            "employee_id",
+            "user_id"
+        ),
+        "locations" to listOf(
+            "record_id",
+            "location_id",
+            "name"
+        ),
+        "timecards" to listOf(
+            "record_id",
+            "location_id",
+            "employee_id"
+        )
+    )
+
+    private val insuranceScope = "data"
+    private val insuranceCollections = hashMapOf(
+        "company" to listOf(
+            "record_id",
+            "region"
+        ),
+        "claims" to listOf(
+            "record_id",
+            "claim_id",
+            "customer_id",
+            "adjuster_id",
+            "region"
+        ),
+        "customer" to listOf(
+            "record_id",
+            "customer_id",
+            "user_id",
+            "email",
+            "region"
+        ),
+        "adjuster" to listOf(
+            "record_id",
+            "adjuster_id",
+            "user_id",
+            "email",
+            "region"
+        ),
+        "picture" to listOf(
+            "record_id",
+            "claim_id",
+            "date",
+            "region"
+        )
+    )
 
     private val employeeIndexes = listOf(
-        "store_id",
+        "record_id",
+        "location_id",
         "employee_id",
         "user_id")
     private val adjusterIndexes = listOf(
@@ -74,6 +132,15 @@ class CouchbaseConnect(context: Context) {
 
     private val gson = Gson()
     var db: Database? = null
+    var employees: Collection? = null
+    var locations: Collection? = null
+    var timecards: Collection? = null
+    var company: Collection? = null
+    var claims: Collection? = null
+    var customer: Collection? = null
+    var adjuster: Collection? = null
+    var picture: Collection? = null
+    var scopeName: String = "_default"
     var replicator: Replicator? = null
     var listenerToken: ListenerToken? = null
     private val replicationStatus: MutableState<String> = mutableStateOf("")
@@ -92,50 +159,86 @@ class CouchbaseConnect(context: Context) {
         val databaseFileName = filteredName.plus("_").plus(database)
         Log.i(TAG, "Database Open -> user $username db $database")
 
-        val cfg = DatabaseConfigurationFactory.create(cntx.filesDir.toString())
+        val cfg = DatabaseConfigurationFactory.newConfig(cntx.filesDir.toString())
 
         try {
             when (database) {
-                DatabaseType.EMPLOYEE -> {
-                    employeesDatabase = Database(databaseFileName, cfg)
-                    createIndexes(DatabaseType.EMPLOYEE)
-                    db = employeesDatabase
-                    employeesDatabaseOpen = true
+                DatabaseType.TIMECARD -> {
+                    Log.i(TAG, "Creating database of type timecard")
+                    scopeName = timecardScope
+                    db = Database(
+                        database,
+                        DatabaseConfigurationFactory.newConfig()
+                    )
+                    timecardCollections.forEach { item ->
+                        if (item.key == "employees") {
+                            employees = db!!.createCollection("employees", timecardScope)
+                            createIndexes(employees, item.value)
+                        }
+                        if (item.key == "locations") {
+                            locations = db!!.createCollection("locations", timecardScope)
+                            createIndexes(locations, item.value)
+                        }
+                        if (item.key == "timecards") {
+                            timecards = db!!.createCollection("timecards", timecardScope)
+                            createIndexes(timecards, item.value)
+                        }
+                    }
+                    timecardDbOpen = true
                 }
-                DatabaseType.ADJUSTER -> {
-                    adjusterDatabase = Database(databaseFileName, cfg)
-                    createIndexes(DatabaseType.ADJUSTER)
-                    db = adjusterDatabase
-                    adjusterDatabaseOpen = true
+                DatabaseType.INSURANCE -> {
+                    Log.i(TAG, "Creating database of type insurance")
+                    scopeName = insuranceScope
+                    db = Database(
+                        database,
+                        DatabaseConfigurationFactory.newConfig()
+                    )
+                    insuranceCollections.forEach { item ->
+                        if (item.key == "company") {
+                            company = db!!.createCollection("company", insuranceScope)
+                            createIndexes(company, item.value)
+                        }
+                        if (item.key == "claims") {
+                            claims = db!!.createCollection("claims", insuranceScope)
+                            createIndexes(claims, item.value)
+                        }
+                        if (item.key == "customer") {
+                            customer = db!!.createCollection("customer", insuranceScope)
+                            createIndexes(customer, item.value)
+                        }
+                        if (item.key == "adjuster") {
+                            adjuster = db!!.createCollection("adjuster", insuranceScope)
+                            createIndexes(adjuster, item.value)
+                        }
+                        if (item.key == "picture") {
+                            picture = db!!.createCollection("picture", insuranceScope)
+                            createIndexes(picture, item.value)
+                        }
+                    }
+                    insuranceDbOpen = true
                 }
             }
             syncDatabase(database, gateway, session, cookie)
-        } catch (e: CouchbaseLiteException) {
+        } catch (e: java.lang.Exception) {
             e.printStackTrace()
+        }
+        db ?: throw IllegalStateException("Database open failed")
+        db!!.scopes.forEach { scope ->
+            Log.i(TAG, "Scope :: " + scope.name)
+            scope.collections.forEach {
+                Log.i(TAG,"    Collection :: " + it.name)
+            }
         }
     }
 
-    private fun createIndexes(databaseType: String) {
-        var database: Database? = null
-        var indexes: Iterator<String> = iterator {  }
+    private fun createIndexes(collection: Collection?, indexes: List<String>) {
         try {
-            when (databaseType) {
-                DatabaseType.EMPLOYEE -> {
-                    database = employeesDatabase
-                    indexes = employeeIndexes.listIterator()
-                }
-                DatabaseType.ADJUSTER -> {
-                    database = adjusterDatabase
-                    indexes = adjusterIndexes.listIterator()
-                }
-            }
-            database?.let {
-                while (indexes.hasNext()) {
-                    val indexField = indexes.next()
+            collection?.let {
+                indexes.forEach { indexField ->
                     val indexName = "idx_${indexField}"
                     Log.i(TAG, "Processing Index $indexName")
-                    if (!it.indexes.contains(indexName)) {
-                        it.createIndex(
+                    if (!collection.indexes.contains(indexName)) {
+                        collection.createIndex(
                             indexName, IndexBuilder.valueIndex(
                                 ValueIndexItem.property(indexField)
                             )
@@ -152,16 +255,20 @@ class CouchbaseConnect(context: Context) {
         val connectString = "ws://$gateway:4984/$database"
         Log.i(TAG, "Sync init -> $connectString")
         Log.i(TAG, "Sync Session Cookie -> $cookie")
+        Log.i(TAG, "Collections: ${db!!.collections}")
 
-        replicator = Replicator(
-            ReplicatorConfigurationFactory.create(
-                database = db,
-                target = URLEndpoint(URI(connectString)),
-                type = ReplicatorType.PUSH_AND_PULL,
-                authenticator = SessionAuthenticator(session, cookie),
-                continuous = true
+        db?.let { liteDatabase ->
+            replicator = Replicator(
+                ReplicatorConfigurationFactory.newConfig(
+                    collections = mapOf(liteDatabase.getCollections(scopeName) to null),
+                    target = URLEndpoint(URI(connectString)),
+                    type = ReplicatorType.PUSH_AND_PULL,
+                    authenticator = SessionAuthenticator(session, cookie),
+                    continuous = true
+                )
             )
-        )
+        }
+        replicator ?: throw IllegalStateException("Can not create replicator for database $database")
 
         listenerToken = replicator!!.addChangeListener { change ->
             val err = change.status.error
@@ -208,11 +315,11 @@ class CouchbaseConnect(context: Context) {
 
     fun isDbOpen(database: String): Boolean {
         return when (database) {
-            DatabaseType.EMPLOYEE -> {
-                employeesDatabaseOpen
+            DatabaseType.TIMECARD -> {
+                timecardDbOpen
             }
-            DatabaseType.ADJUSTER -> {
-                adjusterDatabaseOpen
+            DatabaseType.INSURANCE -> {
+                insuranceDbOpen
             }
             else -> {
                 false
@@ -357,23 +464,23 @@ class CouchbaseConnect(context: Context) {
     suspend fun queryEmployees(): ArrayList<Employee> {
         return withContext(Dispatchers.IO) {
             Log.i(TAG, "Begin Employee Query")
-            val employees = arrayListOf<Employee>()
+            val employeeData = arrayListOf<Employee>()
             try {
                 val query = QueryBuilder
                     .select(
                         SelectResult.all()
                     )
-                    .from(DataSource.database(db!!).`as`("employees"))
+                    .from(DataSource.collection(employees!!).`as`("employees"))
                     .orderBy(Ordering.expression(Expression.property("employee_id").from("employees")))
                 query.execute().allResults().forEach { item ->
                     val json = item.toJSON()
                     val employee = gson.fromJson(json, EmployeeDao::class.java).item
-                    employees.add(employee)
+                    employeeData.add(employee)
                 }
             } catch (e: Exception){
                 Log.e(e.message, e.stackTraceToString())
             }
-            return@withContext employees
+            return@withContext employeeData
         }
     }
 
@@ -446,6 +553,26 @@ class CouchbaseConnect(context: Context) {
         return claim
     }
 
+    suspend fun getEmployeeByUserName(userName: String): Employee {
+        var employee = Employee()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.all()
+                )
+                .from(DataSource.collection(employees!!))
+                .where(
+                    Expression.property("user_id").equalTo(Expression.string(userName))
+                )
+            query.execute().allResults().forEach { item ->
+                val json = item.getDictionary(0)?.toJSON()
+                employee = gson.fromJson(json, Employee::class.java)
+            }
+            if (employee.employeeId.isEmpty()) throw DocNotFoundException("Employee $userName not found")
+        }
+        return employee
+    }
+
     suspend fun getEmployeeById(documentId: String): Employee {
         var employee = Employee()
         retryBlock {
@@ -458,7 +585,7 @@ class CouchbaseConnect(context: Context) {
                     }
                 }
             }
-            if (employee.recordId == 0) throw DocNotFoundException("Doc $documentId not found")
+            if (employee.employeeId.isEmpty()) throw DocNotFoundException("Doc $documentId not found")
         }
         return employee
     }
@@ -557,12 +684,30 @@ class CouchbaseConnect(context: Context) {
         return total
     }
 
+    suspend fun getEmployeeCounts(): EmployeeTotal {
+        var total = EmployeeTotal()
+        retryBlock {
+            db?.let {
+                val query = QueryBuilder
+                    .select(
+                        SelectResult.expression(Function.count(Expression.string("*"))).`as`("total")
+                    )
+                    .from(DataSource.collection(employees!!))
+                query.execute().allResults().forEach { item ->
+                    val json = item.toJSON()
+                    total = gson.fromJson(json, EmployeeTotal::class.java)
+                }
+            }
+        }
+        return total
+    }
+
     fun updateDocument(doc: MutableDocument) {
         db!!.save(doc)
     }
 
-    fun dbCount(): String {
-        return db!!.count.toString()
+    fun dbCount(collection: Collection): String {
+        return collection.count.toString()
     }
 
     fun replicationWait() {
@@ -577,19 +722,18 @@ class CouchbaseConnect(context: Context) {
         }
     }
 
-    suspend fun waitForDocuments(maxDelay: Long, checkPeriod: Long) : Boolean{
+    suspend fun waitForDocuments(collection: Collection, maxDelay: Long, checkPeriod: Long) : Boolean{
         if(maxDelay < 0) return false
-        if(dbCount().toInt() > 0) return true
+        if(dbCount(collection).toInt() > 0) return true
         delay(checkPeriod)
-        return waitForDocuments(maxDelay - checkPeriod, checkPeriod)
+        return waitForDocuments(collection, maxDelay - checkPeriod, checkPeriod)
     }
 
     fun closeDatabase() {
         try {
-            if (db != null) {
+            db?.let { database ->
                 stopSync()
-                db!!.close()
-                db = null
+                database.close()
             }
         } catch (e: CouchbaseLiteException) {
             e.printStackTrace()
@@ -597,8 +741,8 @@ class CouchbaseConnect(context: Context) {
     }
 
     private fun stopSync() {
-        if (listenerToken != null) {
-            replicator!!.removeChangeListener(listenerToken!!)
+        listenerToken?.let {
+            replicator?.stop()
         }
     }
 }
@@ -613,6 +757,6 @@ object ReplicationStatus {
 }
 
 object DatabaseType {
-    const val EMPLOYEE = "employees"
-    const val ADJUSTER = "adjuster"
+    const val TIMECARD = "timecard"
+    const val INSURANCE = "insurance"
 }
