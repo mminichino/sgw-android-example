@@ -18,6 +18,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/locationName"
+            android:text="@string/locationName"
+            android:textSize="18sp"
+            android:textColor="@color/black" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -140,50 +149,56 @@
             </TableLayout>
 
             <TextView
-                android:id="@+id/documentCount"
+                android:id="@+id/employeeStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="@string/documentCount"
+                android:text="@string/employeeStatus"
                 android:padding="8dp"
                 android:textSize="20sp" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/showData"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:padding="@dimen/fab_margin"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="@string/logout"
-            android:textColor="@color/white"
-            android:onClick="onLogoutTapped" />
-
-        <Button
-            android:id="@+id/showDump"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/fab_margin"
-            android:padding="@dimen/fab_margin"
-            android:backgroundTint="@color/colorPrimary"
-            android:text="@string/dump"
-            android:textColor="@color/white"
-            android:onClick="onDumpTapped" />
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+            <Button
+                android:id="@+id/showData"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/fab_margin"
+                android:padding="@dimen/fab_margin"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="@string/logout"
+                android:textColor="@color/white"
+                android:onClick="onLogoutTapped" />
+            <View
+                android:layout_width="20dp"
+                android:layout_height="0dp"/>
+            <Button
+                android:id="@+id/clockButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/fab_margin"
+                android:padding="@dimen/fab_margin"
+                android:backgroundTint="@color/colorPrimary"
+                android:text="@string/clockButton"
+                android:textColor="@color/white"
+                android:onClick="onClockTapped" />
+        </LinearLayout>
 
         <LinearLayout
-            android:layout_width="300dp"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="10dp"
-            android:layout_marginStart="10dp"
             android:layout_marginTop="30dp"
             android:layout_gravity="center"
-            android:orientation="vertical">
+            android:gravity="center">
             <ListView
-                android:id="@+id/dumpTable"
-                android:layout_width="wrap_content"
+                android:id="@+id/timeCardTable"
+                android:layout_width="350dp"
                 android:layout_height="400dp"/>
         </LinearLayout>
 

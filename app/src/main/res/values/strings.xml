@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">sgwdemo</string>
     <string name="store">Store</string>
     <string name="empid">Employee ID</string>
@@ -66,4 +66,7 @@
     <string name="pictureCountLabel">Images:</string>
     <string name="imageViewer">Image View</string>
     <string name="doneButton">Done</string>
+    <string name="locationName">Location</string>
+    <string name="clockButton">Check In</string>
+    <string name="employeeStatus">Status:</string>
 </resources>

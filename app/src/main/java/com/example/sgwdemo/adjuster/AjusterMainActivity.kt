@@ -120,8 +120,10 @@ class AdjusterMainActivity : AppCompatActivity() {
             val scope = CoroutineScope(Dispatchers.Default)
             scope.launch {
                 val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-                val currentCount = db.getClaimCounts()
-                documentCount?.text = String.format("Claims: %d", currentCount.total)
+                db.db?.let {
+                    val currentCount = db.getClaimCounts()
+                    documentCount?.text = String.format("Claims: %d", currentCount.total)
+                }
             }
             handler.postDelayed(this, 1000)
         }

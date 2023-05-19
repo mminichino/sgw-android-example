@@ -11,13 +11,18 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.couchbase.lite.Collection
 import com.couchbase.lite.Function
+import com.couchbase.lite.Document
 import com.example.sgwdemo.models.Adjuster
 import com.example.sgwdemo.models.ClaimTotal
 import com.example.sgwdemo.models.Employee
 import com.example.sgwdemo.models.EmployeeDao
 import com.example.sgwdemo.models.EmployeeTotal
+import com.example.sgwdemo.models.Location
 import com.example.sgwdemo.models.Picture
 import com.example.sgwdemo.models.PictureList
+import com.example.sgwdemo.models.Timecard
+import com.example.sgwdemo.models.TimecardDao
+import com.example.sgwdemo.models.TimecardId
 import kotlinx.coroutines.*
 import java.lang.IllegalStateException
 import kotlin.math.pow
@@ -483,6 +488,13 @@ class CouchbaseConnect(context: Context) {
         return collection.getDocument(documentId)!!.toMutable()
     }
 
+    fun removeDocument(collection: Collection, documentId: String) {
+        val document = collection.getDocument(documentId)
+        document?.let { doc ->
+            collection.delete(doc)
+        }
+    }
+
     fun getImage(documentId: String): PictureList? {
         var pictureData: PictureList? = null
         picture?.let { pic ->
@@ -501,21 +513,30 @@ class CouchbaseConnect(context: Context) {
         return collection.getDocument(documentId) != null
     }
 
-    suspend fun getMutableDocById(documentId: String): MutableDocument {
-        var mutableDoc = MutableDocument()
-        return withContext(Dispatchers.IO) {
-            try {
-                db?.let { database ->
-                    val doc = database.getDocument(documentId)
-                    doc?.let { document ->
-                        mutableDoc = document.toMutable()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e(e.message, e.stackTraceToString())
+    suspend fun getCompletedTimeCards(employeeId: String): ArrayList<Timecard> {
+        val timeCardData = arrayListOf<Timecard>()
+        retryBlock {
+            val query = QueryBuilder
+                .select(
+                    SelectResult.all()
+                )
+                .from(DataSource.collection(timecards!!))
+                .where(
+                    Expression.property("employee_id").equalTo(Expression.string(employeeId))
+                        .and(
+                            Expression.property("status").equalTo(Expression.booleanValue(false))
+                        )
+                )
+                .orderBy(Ordering.property("time_out").descending())
+                .limit(Expression.intValue(10))
+            query.execute().allResults().forEach { item ->
+                val json = item.toJSON()
+                val card = gson.fromJson(json, TimecardDao::class.java).item
+                timeCardData.add(card)
             }
-            return@withContext mutableDoc
+            if (timeCardData.size == 0) Log.i(TAG,"No timecards found for EID $employeeId")
         }
+        return timeCardData
     }
 
     private suspend fun <T> retryBlock(retryCount: Int = 10, waitFactor: Long = 100, block: suspend () -> T): T {
@@ -568,21 +589,21 @@ class CouchbaseConnect(context: Context) {
         return employee
     }
 
-    suspend fun getEmployeeById(documentId: String): Employee {
-        var employee = Employee()
+    suspend fun getLocationById(documentId: String): Location {
+        var locationData = Location()
         retryBlock {
-            db?.let { database ->
-                val doc = database.getDocument(documentId)
+            locations?.let { loc ->
+                val doc = loc.getDocument(documentId)
                 doc?.let { document ->
                     val json = document.toJSON()
                     json?.let {
-                        employee = gson.fromJson(json, Employee::class.java)
+                        locationData = gson.fromJson(json, Location::class.java)
                     }
                 }
             }
-            if (employee.employeeId.isEmpty()) throw DocNotFoundException("Doc $documentId not found")
+            if (locationData.locationId.isEmpty()) throw DocNotFoundException("Doc $documentId not found")
         }
-        return employee
+        return locationData
     }
 
     suspend fun getAdjusterByUserName(userName: String): Adjuster {
@@ -710,6 +731,7 @@ class CouchbaseConnect(context: Context) {
             db?.let { database ->
                 stopSync()
                 database.close()
+                db = null
             }
         } catch (e: CouchbaseLiteException) {
             e.printStackTrace()
