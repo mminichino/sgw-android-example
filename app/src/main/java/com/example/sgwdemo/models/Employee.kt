@@ -15,7 +15,7 @@ data class EmployeeDao(
     )
 
 data class Employee (
-    @SerializedName("record_id") val recordId: String,
+    @SerializedName("record_id") val recordId: Int,
     @SerializedName("location_id") val storeId: String,
     @SerializedName("employee_id") val employeeId: String,
     @SerializedName("name") val name: String,
@@ -34,7 +34,7 @@ data class Employee (
     @SerializedName("rate") val rate: Float
 ) {
     constructor() : this(
-        "",
+        0,
         "",
         "",
         "",

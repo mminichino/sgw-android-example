@@ -49,7 +49,7 @@ class EditClaimActivity : AppCompatActivity() {
         val scope = CoroutineScope(Dispatchers.Default)
 
         scope.launch {
-            val claim = db.getClaimById("claim::${claimId}")
+            val claim = db.getClaimById("claims::${claimId}")
             val pictures = db.getPictureIdByClaim(claimId!!)
 
             withContext(Dispatchers.Main) {
@@ -115,7 +115,7 @@ class EditClaimActivity : AppCompatActivity() {
 
     fun onSaveTapped(view: View?) {
         val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
-        documentId = "claim::${claimId}"
+        documentId = "claims::${claimId}"
         val claimAmountString = claimAmountInput!!.text
 
         val regex = "^(\\d+)(\\.\\d{2})?$"

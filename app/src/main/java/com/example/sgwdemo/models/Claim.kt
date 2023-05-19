@@ -18,7 +18,7 @@ data class Claim (
     @SerializedName("claim_paid") val claimPaid: Boolean,
     @SerializedName("claim_status") val claimStatus: Int,
     @SerializedName("customer_id") val customerId: String,
-    @SerializedName("record_id") val recordId: String,
+    @SerializedName("record_id") val recordId: Int,
     @SerializedName("region") val region: String,
     @SerializedName("claim_locked") val claim_locked: Boolean
     ) {
@@ -30,7 +30,7 @@ data class Claim (
         false,
         0,
         "",
-        "",
+        0,
         "",
         false
     )

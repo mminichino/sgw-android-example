@@ -3,7 +3,7 @@ package com.example.sgwdemo.models
 import com.google.gson.annotations.SerializedName
 
 data class Adjuster (
-        @SerializedName("record_id") val recordId: String,
+        @SerializedName("record_id") val recordId: Int,
         @SerializedName("adjuster_id") val adjusterId: String,
         @SerializedName("user_id") val userId: String,
         @SerializedName("email") val email: String,
@@ -18,7 +18,7 @@ data class Adjuster (
         @SerializedName("region") val region: String
         ) {
         constructor() : this(
-                "",
+                0,
                 "",
                 "",
                 "",
