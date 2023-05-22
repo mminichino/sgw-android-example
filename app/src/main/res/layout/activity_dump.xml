@@ -8,14 +8,14 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginEnd="10dp"
+        android:layout_gravity="start"
+        android:layout_marginStart="10dp"
         android:orientation="horizontal">
         <Button
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
+            android:layout_gravity="start"
             android:backgroundTint="@color/colorPrimary"
             android:textColor="@color/white"
             android:layout_marginTop="@dimen/fab_margin"
