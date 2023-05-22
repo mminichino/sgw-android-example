@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -44,8 +46,12 @@ class MainActivity : AppCompatActivity() {
     var employeeAddress: TextView? = null
     var employeePhone: TextView? = null
     var employeeZipCode: TextView? = null
+    var employeeHoursWorked: TextView? = null
+    var employeePayDue: TextView? = null
     var employeeStatus: Boolean = false
-    var timeCardDocId: String = ""
+    var employeePayRate: Float = 0.00F
+    var employeeTimeWorked: String = "0 Hours 0 Minutes"
+    var employeePayBalance: Float = 0.00F
     var employeeIdNum: Int = 0
     var handler: Handler = Handler(Looper.getMainLooper())
 
@@ -64,12 +70,30 @@ class MainActivity : AppCompatActivity() {
         employeeAddress = findViewById(R.id.employeeAddress)
         employeePhone = findViewById(R.id.employeePhone)
         employeeZipCode = findViewById(R.id.employeeZipCode)
+        employeeHoursWorked = findViewById(R.id.workedHours)
+        employeePayDue = findViewById(R.id.payDue)
         timeCardView = findViewById(R.id.timeCardTable)
 
         populateHeaderInfo(locationIdValue!!)
         populateEmployeeInfo(employeeIdValue!!)
         handler.post(runnableCode)
         Log.i(TAG, "Started Main Activity")
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_dump,menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val cntx: Context = applicationContext
+        when (item.itemId){
+            R.id.dump -> {
+                val intent = Intent(cntx, DumpActivity::class.java)
+                startActivity(intent)
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     fun onClockTapped(view: View?) {
@@ -90,10 +114,12 @@ class MainActivity : AppCompatActivity() {
                 .setString("time_in", oldDoc.getString("time_in"))
                 .setString("time_out", time.epochSecond.toString())
                 .setInt("duration", oldDoc.getInt("duration"))
+                .setFloat("rate", oldDoc.getFloat("rate"))
                 .setBoolean("paid", oldDoc.getBoolean("paid"))
             db.updateDocument(db.timecards!!, newDoc)
             db.removeDocument(db.timecards!!, activeDocId)
             refreshTimeCardTable()
+            populateTimeWorked(employeeIdNum.toString())
         } else {
             val mutableDoc = MutableDocument(activeDocId)
             mutableDoc.setString("location_id", locationIdValue)
@@ -102,6 +128,7 @@ class MainActivity : AppCompatActivity() {
                 .setString("time_in", time.epochSecond.toString())
                 .setString("time_out", "")
                 .setInt("duration", 0)
+                .setFloat("rate", employeePayRate)
                 .setBoolean("paid", false)
             db.updateDocument(db.timecards!!, mutableDoc)
         }
@@ -155,7 +182,9 @@ class MainActivity : AppCompatActivity() {
                 employeePhone?.text = employee.phone
                 employeeZipCode?.text = employee.zipCode
                 employeeIdNum = employee.employeeId.toInt()
+                employeePayRate = employee.rate
                 refreshTimeCardTable()
+                populateTimeWorked(employee.employeeId)
             }
         }
     }
@@ -168,6 +197,31 @@ class MainActivity : AppCompatActivity() {
             val location = db.getLocationById("locations::$locationId")
             withContext(Dispatchers.Main) {
                 locationName?.text = location.name
+            }
+        }
+    }
+
+    private fun populateTimeWorked(employeeId: String) {
+        val db: CouchbaseConnect = CouchbaseConnect.getInstance(cntx)
+        val scope = CoroutineScope(Dispatchers.Default)
+        var cards: ArrayList<Timecard>
+
+        scope.launch {
+            cards = db.queryTimecards(employeeIdNum.toString())
+            withContext(Dispatchers.Main) {
+                var minutes: Int = 0
+                var pay = 0.00F
+                cards.forEach { card ->
+                    val payMinRate: Float = card.rate / 60
+                    val cardSeconds = card.timeOut.toLong() - card.timeIn.toLong()
+                    val cardMinutes = kotlin.math.ceil(cardSeconds.toFloat() / 60).toInt()
+                    minutes += cardMinutes
+                    pay += cardMinutes * payMinRate
+                }
+                val hours = kotlin.math.floor(minutes.toFloat() / 60).toInt()
+                val remainder = minutes % 60
+                employeeHoursWorked?.text = String.format("%d Hours %d Minutes", hours, remainder)
+                employeePayDue?.text = String.format("$ %.2f", pay)
             }
         }
     }

@@ -69,4 +69,7 @@
     <string name="locationName">Location</string>
     <string name="clockButton">Check In</string>
     <string name="employeeStatus">Status:</string>
+    <string name="backButton">Back</string>
+    <string name="workedHours">Time Worked</string>
+    <string name="payDue">Pay Due</string>
 </resources>

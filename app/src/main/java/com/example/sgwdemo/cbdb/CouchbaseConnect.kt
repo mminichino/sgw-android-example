@@ -471,7 +471,7 @@ class CouchbaseConnect(context: Context) {
                         SelectResult.all()
                     )
                     .from(DataSource.collection(employees!!).`as`("employees"))
-                    .orderBy(Ordering.expression(Expression.property("employee_id").from("employees")))
+                    .orderBy(Ordering.expression(Expression.property("record_id").from("employees")))
                 query.execute().allResults().forEach { item ->
                     val json = item.toJSON()
                     val employee = gson.fromJson(json, EmployeeDao::class.java).item
@@ -481,6 +481,35 @@ class CouchbaseConnect(context: Context) {
                 Log.e(e.message, e.stackTraceToString())
             }
             return@withContext employeeData
+        }
+    }
+
+    suspend fun queryTimecards(employeeId: String): ArrayList<Timecard> {
+        return withContext(Dispatchers.IO) {
+            Log.i(TAG, "Begin Timecard Query")
+            val timecardData = arrayListOf<Timecard>()
+            try {
+                val query = QueryBuilder
+                    .select(
+                        SelectResult.all()
+                    )
+                    .from(DataSource.collection(timecards!!).`as`("timecards"))
+                    .where(
+                        Expression.property("employee_id").from("timecards").equalTo(Expression.string(employeeId))
+                            .and(
+                                Expression.property("status").from("timecards").equalTo(Expression.booleanValue(false))
+                            )
+                    )
+                    .orderBy(Ordering.expression(Expression.property("time_in").from("timecards")))
+                query.execute().allResults().forEach { item ->
+                    val json = item.toJSON()
+                    val card = gson.fromJson(json, TimecardDao::class.java).item
+                    timecardData.add(card)
+                }
+            } catch (e: Exception){
+                Log.e(e.message, e.stackTraceToString())
+            }
+            return@withContext timecardData
         }
     }
 

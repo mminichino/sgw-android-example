@@ -16,7 +16,7 @@ data class EmployeeDao(
 
 data class Employee (
     @SerializedName("record_id") val recordId: Int,
-    @SerializedName("location_id") val storeId: String,
+    @SerializedName("location_id") val locationId: String,
     @SerializedName("employee_id") val employeeId: String,
     @SerializedName("name") val name: String,
     @SerializedName("user_id") val userId: String,

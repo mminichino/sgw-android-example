@@ -146,6 +146,46 @@
                         android:textSize="18sp"
                         android:padding="5dp" />
                 </TableRow>
+                <TableRow>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/workedHours"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/workedHours"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:padding="5dp" />
+                </TableRow>
+                <TableRow>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="@string/payDue"
+                        android:gravity="end"
+                        android:textAlignment="gravity"
+                        android:paddingStart="1dp"
+                        android:paddingEnd="7dp"
+                        android:textSize="18sp"
+                        android:textColor="@color/black" />
+                    <TextView
+                        android:id="@+id/payDue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/black"
+                        android:textSize="18sp"
+                        android:padding="5dp" />
+                </TableRow>
             </TableLayout>
 
             <TextView
@@ -199,7 +239,7 @@
             <ListView
                 android:id="@+id/timeCardTable"
                 android:layout_width="350dp"
-                android:layout_height="400dp"/>
+                android:layout_height="200dp"/>
         </LinearLayout>
 
     </LinearLayout>

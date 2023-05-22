@@ -27,6 +27,7 @@ data class Timecard (
     @SerializedName("time_in") val timeIn: String,
     @SerializedName("time_out") val timeOut: String,
     @SerializedName("duration") val duration: Int,
+    @SerializedName("rate") val rate: Float,
     @SerializedName("paid") val paid: Boolean
 ) {
     constructor() : this(
@@ -36,6 +37,7 @@ data class Timecard (
         "",
         "",
         0,
+        0.00F,
         false
     )
 }

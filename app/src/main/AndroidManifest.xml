@@ -39,6 +39,7 @@
         <activity android:name=".adjuster.EditClaimActivity" />
         <activity android:name=".adjuster.EditPhotos" />
         <activity android:name=".adjuster.ImageViewer" />
+        <activity android:name=".main.DumpActivity" />
     </application>
 
 </manifest>

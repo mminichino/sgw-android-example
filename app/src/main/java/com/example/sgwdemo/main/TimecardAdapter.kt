@@ -34,7 +34,7 @@ class TimecardAdapter(context: Context, private val arrayList: ArrayList<Timecar
         val timecard = getItem(position) as Timecard
 
         val itemNumber = position + 1
-        val timeFormat = SimpleDateFormat("M/d/yy h:m a", Locale.US)
+        val timeFormat = SimpleDateFormat("M/d/yy h:mm a", Locale.US)
         val inTimeText = timeFormat.format(Date(timecard.timeIn.toLong() * 1000))
         val outTimeText = timeFormat.format(Date(timecard.timeOut.toLong() * 1000))
         entryNumber.text = itemNumber.toString()
