@@ -259,7 +259,7 @@ class CouchbaseConnect(context: Context) {
     }
 
     private fun syncDatabase(database: String, gateway: String, session: String, cookie: String) {
-        val connectString = "ws://$gateway:4984/$database"
+        val connectString = "wss://$gateway:4984/$database"
         Log.i(TAG, "Sync init -> $connectString")
         Log.i(TAG, "Sync Session Cookie -> $cookie")
 
@@ -270,6 +270,7 @@ class CouchbaseConnect(context: Context) {
                     target = URLEndpoint(URI(connectString)),
                     type = ReplicatorType.PUSH_AND_PULL,
                     authenticator = SessionAuthenticator(session, cookie),
+                    acceptOnlySelfSignedServerCertificate = true,
                     continuous = true
                 )
             )
