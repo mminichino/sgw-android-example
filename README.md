@@ -16,7 +16,7 @@ The password for all users is "password". To reset and start from scratch, use t
 ## Backend Container
 
 To run the Sync Gateway, Couchbase Server, and Auth Microservice backend components for the demo use the [mobiledemo](https://hub.docker.com/r/mminichino/mobiledemo) container version 2.0.2.
-You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/2.0.2/rundemo.sh) to run and manage the container.
+You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/2.0.4/rundemo.sh) to run and manage the container.
 Run the following to download the utility:
 ```
 curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/2.0.2/rundemo.sh
