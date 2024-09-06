@@ -19,7 +19,7 @@ To run the Sync Gateway, Couchbase Server, and Auth Microservice backend compone
 You can obtain a [helper utility](https://github.com/mminichino/mobile-demo-container/releases/download/2.0.4/rundemo.sh) to run and manage the container.
 Run the following to download the utility:
 ```
-curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/2.0.2/rundemo.sh
+curl -L -O https://github.com/mminichino/mobile-demo-container/releases/download/2.0.4/rundemo.sh
 ```
 ```
 chmod +x rundemo.sh
